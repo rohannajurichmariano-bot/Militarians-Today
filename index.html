@@ -14,27 +14,20 @@
             font-family: 'Segoe UI', Tahoma, sans-serif; 
         }
         
-        /* Ticker Styling */
         .ticker-wrap { background: var(--fmnsh-gold); color: #000; padding: 10px 0; font-weight: bold; overflow: hidden; border-bottom: 2px solid var(--fmnsh-blue); }
         .ticker-move { display: inline-block; white-space: nowrap; padding-right: 100%; animation: ticker 30s linear infinite; }
         @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-        /* Component Styling */
         .navbar { background-color: var(--fmnsh-blue) !important; border-bottom: 4px solid var(--fmnsh-gold); }
         .school-logo { width: 50px; height: 50px; object-fit: contain; margin-right: 12px; background: white; border-radius: 50%; }
-        .announcement-card { border: none; border-left: 8px solid var(--fmnsh-blue); border-radius: 12px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 30px; }
+        .announcement-card { border: none; border-left: 8px solid var(--fmnsh-blue); border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 25px; }
         .event-image { width: 100%; max-height: 450px; object-fit: cover; border-bottom: 1px solid #eee; }
+        .badge-category { background-color: var(--fmnsh-gold); color: #000; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        .verified-badge { color: #1d9bf0; margin-left: 5px; font-size: 0.9rem; }
         
-        /* Status Badges */
-        .badge-status { font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 6px 12px; border-radius: 4px; }
-        .status-new { background-color: #28a745; color: white; }
-        .status-current { background-color: #007bff; color: white; }
-        .status-old { background-color: #6c757d; color: white; }
-        .status-advisory { background-color: var(--fmnsh-gold); color: black; }
-
-        /* Comment Styling */
+        /* Comment Styles */
         .comment-section { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
-        .teacher-reply { border-left: 4px solid var(--fmnsh-blue); background: #eef4ff; padding: 10px; margin-top: 8px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .teacher-reply { border-left: 4px solid var(--fmnsh-blue); background: #eef4ff; padding: 8px; margin-top: 5px; border-radius: 4px; font-size: 0.9rem; }
         
         .hidden { display: none; }
         .edit-mode { border: 2px solid var(--fmnsh-gold) !important; background-color: #fffdf0; }
@@ -42,16 +35,51 @@
 </head>
 <body>
 
-<div class="ticker-wrap">
-    <div class="ticker-move" id="newsTicker">
-        Welcome to Militarians Today! Stay tuned for real-time school updates and official announcements.
-    </div>
-</div>
+<div class="ticker-wrap"><div class="ticker-move" id="newsTicker">Welcome to Militarians Today! Stay tuned for real-time school updates.</div></div>
 
 <nav class="navbar navbar-dark shadow-sm sticky-top mb-4">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center fw-bold" href="#" onclick="showSection('publicFeed')">
-            <img src="logofmnhs.jpg" alt="FMNSH" class="school-logo"> 
-            <span>MILITARIANS TODAY</span>
+            <img src="logofmnhs.jpg" alt="FMNSH" class="school-logo"> <span>MILITARIANS TODAY</span>
         </a>
-        <button class="btn btn-warning btn-sm fw-bold
+        <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">TEACHER LOGIN</button>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    <section id="publicFeed">
+        <div class="text-center mb-5"><h1 class="fw-bold text-dark">CAMPUS BULLETIN</h1></div>
+        <div class="row mb-4"><div class="col-md-7 mx-auto"><input type="text" id="searchBar" class="form-control form-control-lg border-primary" placeholder="Search..." onkeyup="renderAnnouncements()"></div></div>
+        <div id="announcementsList" class="row"></div>
+    </section>
+
+    <section id="loginSection" class="hidden">
+        <div class="card shadow p-4 mx-auto border-0" style="max-width: 400px; margin-top: 50px;">
+            <div class="text-center mb-4"><h5 class="fw-bold">Teacher Access</h5></div>
+            <div class="mb-2"><label class="small fw-bold">Username</label><input type="text" id="adminUser" class="form-control"></div>
+            <div class="mb-3"><label class="small fw-bold">Password</label><input type="password" id="adminPass" class="form-control"></div>
+            <button class="btn btn-primary w-100 fw-bold" onclick="login()">LOGIN</button>
+        </div>
+    </section>
+
+    <section id="teacherDashboard" class="hidden">
+        <div class="d-flex justify-content-between mb-4 border-bottom pb-3"><h2 class="fw-bold">Teacher Dashboard</h2><button class="btn btn-danger btn-sm" onclick="logout()">LOGOUT</button></div>
+        <div class="card shadow-sm p-4 mb-5" id="formCard">
+            <form id="postForm">
+                <input type="hidden" id="editKey">
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="small fw-bold">Title</label><input type="text" id="title" class="form-control" required></div>
+                    <div class="col-md-3">
+                        <label class="small fw-bold">Status Label</label>
+                        <select id="manualStatus" class="form-select">
+                            <option value="auto">Automatic (By Date)</option>
+                            <option value="NEW">New Announcement</option>
+                            <option value="CURRENT">Current Event</option>
+                            <option value="OLD">Old/Previous</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label class="small fw-bold">Event Date</label><input type="date" id="eventDate" class="form-control" required></div>
+                    <div class="col-md-4"><label class="small fw-bold">Category</label><select id="category" class="form-select"><option>Advisory</option><option>Event</option><option>Schedule</option></select></div>
+                    <div class="col-md-4"><label class="small fw-bold">Photo</label><input type="file" id="imageInput" class="form-control" accept="image/*"></div>
+                    <div class="col-md-4"><label class="small fw-bold">Your Name</label><input type="text" id="teacherName" class="form-control" readonly></div>
+                    <div class="col-12"><label class="small fw-bold">Details</label><textarea id="content" class="form-control" rows="
