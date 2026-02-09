@@ -14,25 +14,9 @@
             font-family: 'Segoe UI', Tahoma, sans-serif; 
         }
         
-        /* Section 2.2: Real-time Ticker for Prompts */
-        .ticker-wrap {
-            background: var(--fmnsh-gold);
-            color: #000;
-            padding: 10px 0;
-            font-weight: bold;
-            overflow: hidden;
-            border-bottom: 2px solid var(--fmnsh-blue);
-        }
-        .ticker-move {
-            display: inline-block;
-            white-space: nowrap;
-            padding-right: 100%;
-            animation: ticker 30s linear infinite;
-        }
-        @keyframes ticker {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
+        .ticker-wrap { background: var(--fmnsh-gold); color: #000; padding: 10px 0; font-weight: bold; overflow: hidden; border-bottom: 2px solid var(--fmnsh-blue); }
+        .ticker-move { display: inline-block; white-space: nowrap; padding-right: 100%; animation: ticker 30s linear infinite; }
+        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
         .navbar { background-color: var(--fmnsh-blue) !important; border-bottom: 4px solid var(--fmnsh-gold); }
         .school-logo { width: 50px; height: 50px; object-fit: contain; margin-right: 12px; background: white; border-radius: 50%; }
@@ -40,23 +24,22 @@
         .event-image { width: 100%; max-height: 450px; object-fit: cover; border-bottom: 1px solid #eee; }
         .badge-category { background-color: var(--fmnsh-gold); color: #000; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
         .verified-badge { color: #1d9bf0; margin-left: 5px; font-size: 0.9rem; }
+        
+        /* New Comment Styles */
+        .comment-box { background: #f8f9fa; border-top: 1px solid #eee; padding: 15px; }
+        .reply-item { border-left: 3px solid var(--fmnsh-blue); padding-left: 10px; margin-bottom: 10px; background: #fff; padding: 5px 10px; border-radius: 4px; }
         .hidden { display: none; }
         .edit-mode { border: 2px solid var(--fmnsh-gold) !important; background-color: #fffdf0; }
     </style>
 </head>
 <body>
 
-<div class="ticker-wrap">
-    <div class="ticker-move" id="newsTicker">
-        Welcome to Militarians Today! Stay tuned for real-time school updates and announcements.
-    </div>
-</div>
+<div class="ticker-wrap"><div class="ticker-move" id="newsTicker">Welcome to Militarians Today! Official Announcements appear here.</div></div>
 
 <nav class="navbar navbar-dark shadow-sm sticky-top mb-4">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center fw-bold" href="#" onclick="showSection('publicFeed')">
-            <img src="logofmnhs.jpg" alt="FMNSH" class="school-logo"> 
-            <span>MILITARIANS TODAY</span>
+            <img src="logofmnhs.jpg" alt="FMNSH" class="school-logo"> <span>MILITARIANS TODAY</span>
         </a>
         <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">TEACHER LOGIN</button>
     </div>
@@ -64,21 +47,14 @@
 
 <div class="container mb-5">
     <section id="publicFeed">
-        <div class="text-center mb-5">
-            <h1 class="fw-bold text-dark">CAMPUS BULLETIN</h1>
-            <p class="text-secondary">Official Online Information Center of FMNSH</p>
-        </div>
-        <div class="row mb-4">
-            <div class="col-md-7 mx-auto">
-                <input type="text" id="searchBar" class="form-control form-control-lg border-primary" placeholder="Search announcements..." onkeyup="renderAnnouncements()">
-            </div>
-        </div>
+        <div class="text-center mb-5"><h1 class="fw-bold text-dark">CAMPUS BULLETIN</h1></div>
+        <div class="row mb-4"><div class="col-md-7 mx-auto"><input type="text" id="searchBar" class="form-control form-control-lg border-primary" placeholder="Search announcements..." onkeyup="renderAnnouncements()"></div></div>
         <div id="announcementsList" class="row"></div>
     </section>
 
     <section id="loginSection" class="hidden">
         <div class="card shadow p-4 mx-auto border-0" style="max-width: 400px; margin-top: 50px;">
-            <div class="text-center mb-4"><img src="logofmnhs.jpg" width="70" alt="Logo"><h5 class="mt-3 fw-bold">Teacher Access</h5></div>
+            <div class="text-center mb-4"><img src="logofmnhs.jpg" width="70"><h5 class="mt-3 fw-bold">Teacher Access</h5></div>
             <div class="mb-3"><label class="form-label">Password</label><input type="password" id="adminPass" class="form-control"></div>
             <button class="btn btn-primary w-100 py-2 fw-bold" onclick="login()">LOGIN</button>
         </div>
@@ -94,177 +70,4 @@
             <form id="postForm" class="mt-3">
                 <input type="hidden" id="editKey">
                 <div class="row g-3">
-                    <div class="col-md-6"><label class="small fw-bold">Title</label><input type="text" id="title" class="form-control" required></div>
-                    <div class="col-md-3"><label class="small fw-bold">Category</label><select id="category" class="form-select"><option>Advisory</option><option>Event</option><option>Schedule</option></select></div>
-                    <div class="col-md-3"><label class="small fw-bold">Photo (Optional)</label><input type="file" id="imageInput" class="form-control" accept="image/*"></div>
-                    <div class="col-md-12"><label class="small fw-bold">Teacher Name</label><input type="text" id="teacher" class="form-control" required></div>
-                    <div class="col-12"><label class="small fw-bold">Details</label><textarea id="content" class="form-control" rows="4" required></textarea></div>
-                    <div class="col-12 text-end">
-                        <button type="button" class="btn btn-light me-2 hidden" id="cancelBtn" onclick="resetForm()">CANCEL</button>
-                        <button type="submit" class="btn btn-success px-5 fw-bold" id="saveBtn">PUBLISH TO CLOUD</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <h5 class="fw-bold mb-3">History</h5>
-        <div id="adminPostsList" class="list-group"></div>
-    </section>
-</div>
-
-<script>
-    const BASE_URL = "https://militarianstoday-default-rtdb.firebaseio.com/";
-    const POSTS_URL = BASE_URL + "posts.json";
-    let announcementsData = {};
-
-    async function fetchPosts() {
-        try {
-            const response = await fetch(POSTS_URL);
-            announcementsData = await response.json() || {};
-            renderAnnouncements();
-            renderAdminPosts();
-            updateTicker();
-        } catch (e) { console.error(e); }
-    }
-
-    // Section 2.2: Function to update the scrolling ticker with the latest title
-    function updateTicker() {
-        const keys = Object.keys(announcementsData);
-        if(keys.length > 0) {
-            const latest = announcementsData[keys[keys.length-1]];
-            document.getElementById('newsTicker').innerText = "LATEST NEWS: " + latest.title + " — " + latest.content.substring(0, 100) + "... Check the bulletin for more details!";
-        }
-    }
-
-    function showSection(id) {
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    }
-
-    function toggleAuth() { if(document.getElementById('navBtn').innerText === "TEACHER LOGIN") showSection('loginSection'); else logout(); }
-
-    function login() {
-        if(document.getElementById('adminPass').value === "admin123") {
-            document.getElementById('navBtn').innerText = "LOGOUT";
-            showSection('teacherDashboard');
-        } else alert("Wrong Password!");
-    }
-
-    function logout() { document.getElementById('navBtn').innerText = "TEACHER LOGIN"; showSection('publicFeed'); }
-
-    async function getBase64(file) {
-        return new Promise((res, rej) => {
-            const r = new FileReader(); r.readAsDataURL(file);
-            r.onload = () => res(r.result); r.onerror = e => rej(e);
-        });
-    }
-
-    document.getElementById('postForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const key = document.getElementById('editKey').value;
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.disabled = true;
-
-        const file = document.getElementById('imageInput').files[0];
-        let img = file ? await getBase64(file) : (key ? announcementsData[key].image : "");
-
-        const post = {
-            title: document.getElementById('title').value,
-            category: document.getElementById('category').value,
-            teacher: document.getElementById('teacher').value,
-            content: document.getElementById('content').value,
-            image: img,
-            datePosted: key ? announcementsData[key].datePosted : new Date().toLocaleString(),
-            lastEdited: key ? "(Edited: " + new Date().toLocaleString() + ")" : ""
-        };
-
-        const url = key ? `${BASE_URL}posts/${key}.json` : POSTS_URL;
-        const method = key ? "PUT" : "POST";
-
-        await fetch(url, { method: method, body: JSON.stringify(post) });
-        resetForm();
-        fetchPosts();
-        saveBtn.disabled = false;
-        alert(key ? "Update Successful!" : "Published Online!");
-    });
-
-    function editPost(key) {
-        const p = announcementsData[key];
-        document.getElementById('editKey').value = key;
-        document.getElementById('title').value = p.title;
-        document.getElementById('category').value = p.category;
-        document.getElementById('teacher').value = p.teacher;
-        document.getElementById('content').value = p.content;
-        document.getElementById('formTitle').innerText = "Editing Cloud Announcement";
-        document.getElementById('saveBtn').innerText = "UPDATE CLOUD";
-        document.getElementById('cancelBtn').classList.remove('hidden');
-        document.getElementById('formCard').classList.add('edit-mode');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function resetForm() {
-        document.getElementById('postForm').reset();
-        document.getElementById('editKey').value = "";
-        document.getElementById('formTitle').innerText = "Post Announcement";
-        document.getElementById('saveBtn').innerText = "PUBLISH TO CLOUD";
-        document.getElementById('cancelBtn').classList.add('hidden');
-        document.getElementById('formCard').classList.remove('edit-mode');
-    }
-
-    async function deletePost(key) {
-        if(confirm("Delete this?")) {
-            await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" });
-            fetchPosts();
-        }
-    }
-
-    function renderAnnouncements() {
-        const list = document.getElementById('announcementsList');
-        const search = document.getElementById('searchBar').value.toLowerCase();
-        list.innerHTML = "";
-        Object.keys(announcementsData).reverse().forEach(key => {
-            const p = announcementsData[key];
-            if(p.title.toLowerCase().includes(search)) {
-                const diff = Math.abs(new Date() - new Date(p.datePosted)) / 36e5;
-                const badge = diff < 24 ? '<span class="badge bg-success me-2">NEW</span>' : '<span class="badge bg-secondary me-2">PREVIOUS</span>';
-                
-                list.innerHTML += `
-                <div class="col-12"><div class="card announcement-card">
-                    ${p.image ? `<img src="${p.image}" class="event-image">` : ''}
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <div>${badge}<h4 class="fw-bold d-inline text-uppercase">${p.title}</h4></div>
-                            <span class="badge badge-category p-2">${p.category}</span>
-                        </div>
-                        <p class="mt-3" style="white-space:pre-wrap;">${p.content}</p>
-                        <div class="d-flex justify-content-between border-top pt-2 small text-muted">
-                            <span>
-                                <strong>Posted by:</strong> ${p.teacher} 
-                                <i class="fas fa-check-circle verified-badge" title="Authorized School Personnel"></i>
-                            </span>
-                            <span>${p.datePosted} ${p.lastEdited || ''}</span>
-                        </div>
-                    </div>
-                </div></div>`;
-            }
-        });
-    }
-
-    function renderAdminPosts() {
-        const list = document.getElementById('adminPostsList');
-        list.innerHTML = "";
-        Object.keys(announcementsData).reverse().forEach(key => {
-            const p = announcementsData[key];
-            list.innerHTML += `<div class="list-group-item d-flex justify-content-between align-items-center mb-2 border rounded">
-                <span>${p.title} <br><small class="text-muted">${p.datePosted}</small></span>
-                <div>
-                    <button class="btn btn-sm btn-primary me-1" onclick="editPost('${key}')">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deletePost('${key}')">Delete</button>
-                </div>
-            </div>`;
-        });
-    }
-
-    fetchPosts();
-</script>
-</body>
-</html>
+                    <div class="col-md-6"><label class="small fw-bold">Title</label><input type="text" id
