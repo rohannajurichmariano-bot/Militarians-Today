@@ -3,101 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Militarians Today | Live Bulletin</title>
+    <title>Militarians Today | FMNHS Live Bulletin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --fmnsh-blue: #1a4b8c; --fmnsh-gold: #ffcc00; }
+        :root { --fmnhs-blue: #1a4b8c; --fmnhs-gold: #ffcc00; }
         body { 
             background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('fmnhs.jpg'); 
             background-size: cover; background-attachment: fixed; background-position: center;
             font-family: 'Segoe UI', Tahoma, sans-serif; 
         }
         
-        /* Live Indicator */
-        .live-dot { height: 10px; width: 10px; background-color: #ff0000; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1.5s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .navbar { background-color: var(--fmnhs-blue) !important; border-bottom: 4px solid var(--fmnhs-gold); }
+        .school-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: white; border-radius: 50%; }
+        
+        .status-badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; text-transform: uppercase; }
+        .status-online { background: #28a745; color: white; }
+        .status-offline { background: #dc3545; color: white; }
 
-        .navbar { background-color: var(--fmnsh-blue) !important; border-bottom: 4px solid var(--fmnsh-gold); }
-        .school-logo { width: 50px; height: 50px; object-fit: contain; margin-right: 12px; background: white; border-radius: 50%; }
-        .announcement-card { border: none; border-left: 8px solid var(--fmnsh-blue); border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 25px; }
+        .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 25px; }
         .post-image { width: 100%; max-height: 400px; object-fit: cover; cursor: pointer; }
         .interaction-box { background: #f8f9fa; border-top: 1px solid #eee; padding: 15px; }
-        .admin-reply { border-left: 4px solid var(--fmnsh-blue); background: #eef4ff; padding: 8px; margin-top: 5px; border-radius: 4px; }
+        .comment-item { border-bottom: 1px dashed #ddd; padding: 8px 0; }
+        .admin-reply { border-left: 4px solid var(--fmnhs-blue); background: #eef4ff; padding: 10px; margin-top: 8px; border-radius: 4px; margin-left: 15px; }
         .hidden { display: none; }
-
-        /* Lightbox */
-        #imageModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
-        #modalImg { max-width: 90%; max-height: 90%; border: 3px solid white; }
+        .verified { color: #1d9bf0; margin-left: 4px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<div id="imageModal" onclick="this.style.display='none'"><img id="modalImg"></div>
-
-<nav class="navbar navbar-dark shadow-sm sticky-top mb-4">
-    <div class="container">
-        <a class="navbar-brand d-flex align-items-center fw-bold" href="#" onclick="showSection('publicFeed')">
-            <img src="logofmnhs.jpg" alt="Logo" class="school-logo"> <span>MILITARIANS TODAY</span>
+<nav class="navbar navbar-dark sticky-top mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand d-flex align-items-center fw-bold m-0" href="#" onclick="location.reload()">
+            <img src="logofmnhs.jpg" alt="FMNHS Logo" class="school-logo"> 
+            <span>MILITARIANS TODAY</span>
         </a>
-        <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">ADMIN LOGIN</button>
+        <div class="d-flex align-items-center gap-2">
+            <span id="liveStatus" class="status-badge status-online">Online</span>
+            <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">LOGIN</button>
+        </div>
     </div>
 </nav>
 
 <div class="container mb-5">
     <section id="publicFeed">
-        <div class="text-center mb-5">
-            <h1 class="fw-bold text-dark">CAMPUS BULLETIN</h1>
-            <p class="text-secondary"><span class="live-dot"></span>Official Online Information Center of FMNSH</p>
+        <div class="text-center mb-4">
+            <h1 class="fw-bold">CAMPUS BULLETIN</h1>
+            <p class="text-secondary">Official Online Information Center of FMNHS</p>
         </div>
+
+        <div style="max-width:600px; margin:0 auto 30px auto;">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Search announcements..." onkeyup="renderAnnouncements()">
+            </div>
+        </div>
+
         <div id="announcementsList" class="row"></div>
     </section>
 
     <section id="loginSection" class="hidden">
-        <div class="card shadow p-4 mx-auto border-0" style="max-width: 400px; margin-top: 50px;">
-            <div class="text-center mb-4"><h5 class="fw-bold">Admin Portal</h5></div>
-            <div id="dbStatus" class="alert alert-info py-1 small text-center">Checking Database...</div>
-            <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username">
+        <div class="card shadow-sm p-4 mx-auto border-0" style="max-width: 350px; margin-top: 50px;">
+            <div class="text-center mb-3"><h6 class="fw-bold">ADMIN ACCESS</h6></div>
+            <input type="text" id="adminUser" class="form-control mb-2" placeholder="Username">
             <input type="password" id="adminPass" class="form-control mb-3" placeholder="Password">
             <button class="btn btn-primary w-100 fw-bold" onclick="login()">SIGN IN</button>
         </div>
     </section>
 
     <section id="adminDashboard" class="hidden">
-        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-            <h2 class="fw-bold">Admin: <span id="displayAdminName" class="text-primary"></span></h2>
-            <button class="btn btn-danger btn-sm fw-bold" onclick="logout()">LOGOUT</button>
-        </div>
-        <div class="card shadow-sm p-4 mb-5">
+        <div class="card shadow-sm p-4 mb-4">
+            <h5 class="fw-bold mb-3 text-primary">Admin Control: <span id="displayAdminName"></span></h5>
             <form id="postForm">
-                <div class="row g-3">
-                    <div class="col-md-6"><input type="text" id="postTitle" class="form-control" placeholder="Title" required></div>
-                    <div class="col-md-3">
+                <div class="row g-2">
+                    <div class="col-12"><input type="text" id="postTitle" class="form-control" placeholder="Announcement Title" required></div>
+                    <div class="col-8">
                         <select id="postStatus" class="form-select">
                             <option value="auto">Auto Indicator</option>
-                            <option value="NEW">Force NEW</option>
-                            <option value="OLD">Force OLD</option>
+                            <option value="NEW">NEW</option>
+                            <option value="OLD">OLD</option>
                         </select>
                     </div>
-                    <div class="col-md-3"><input type="file" id="postImage" class="form-control" accept="image/*"></div>
-                    <div class="col-12"><textarea id="postContent" class="form-control" rows="3" placeholder="Announcement text..." required></textarea></div>
-                    <div class="col-12 text-end"><button type="submit" class="btn btn-success px-5 fw-bold">POST NOW</button></div>
+                    <div class="col-4"><input type="file" id="postImage" class="form-control" accept="image/*"></div>
+                    <div class="col-12"><textarea id="postContent" class="form-control" rows="3" placeholder="Details..." required></textarea></div>
+                    <div class="col-12"><button type="submit" class="btn btn-success w-100 fw-bold">POST TO BULLETIN</button></div>
                 </div>
             </form>
+            <button class="btn btn-link text-danger w-100 mt-2 btn-sm" onclick="logout()">LOGOUT</button>
         </div>
-        <div id="adminHistory" class="list-group"></div>
+        <div id="adminHistory" class="list-group shadow-sm"></div>
     </section>
 </div>
 
 <script>
-    // Your Database URL
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
-    
     let announcementsData = {};
     let currentAdmin = null;
     let lastHash = "";
 
-    // Sync Logic
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    function updateStatus() {
+        const status = document.getElementById('liveStatus');
+        status.innerText = navigator.onLine ? "Online" : "Offline";
+        status.className = navigator.onLine ? "status-badge status-online" : "status-badge status-offline";
+    }
+
     async function syncData() {
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
@@ -109,14 +120,10 @@
                 renderAnnouncements();
                 if(currentAdmin) renderAdminHistory();
             }
-            if(document.getElementById('dbStatus')) document.getElementById('dbStatus').innerText = "Database Connected ✅";
-        } catch (e) {
-            if(document.getElementById('dbStatus')) document.getElementById('dbStatus').innerText = "Connection Error ❌";
-        }
+        } catch (e) { }
     }
     setInterval(syncData, 3000);
 
-    // Image to Base64
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -124,13 +131,11 @@
         reader.onerror = error => reject(error);
     });
 
-    // Post Data
     document.getElementById('postForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const imgFile = document.getElementById('postImage').files[0];
         let imgBase64 = "";
         if(imgFile) imgBase64 = await toBase64(imgFile);
-
         const post = {
             title: document.getElementById('postTitle').value,
             content: document.getElementById('postContent').value,
@@ -145,32 +150,47 @@
 
     function renderAnnouncements() {
         const list = document.getElementById('announcementsList');
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         list.innerHTML = "";
+
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            const hours = Math.abs(new Date() - new Date(p.datePosted)) / 36e5;
-            let status = p.manualStatus !== 'auto' ? p.manualStatus : (hours < 24 ? "NEW" : (hours < 72 ? "CURRENT" : "OLD"));
-            let badgeClass = status === "NEW" ? "bg-success" : (status === "CURRENT" ? "bg-primary" : "bg-secondary");
+            if (!p.title.toLowerCase().includes(searchTerm) && !p.content.toLowerCase().includes(searchTerm)) return;
 
-            let admHtml = "";
+            const hours = Math.abs(new Date() - new Date(p.datePosted)) / 36e5;
+            let status = p.manualStatus === 'auto' ? (hours < 24 ? "NEW" : "CURRENT") : p.manualStatus;
+            let badgeClass = status === "NEW" ? "bg-success" : (status === "OLD" ? "bg-secondary" : "bg-primary");
+
+            let commentsHtml = "";
+            if(p.comments) Object.keys(p.comments).forEach(cKey => {
+                const c = p.comments[cKey];
+                commentsHtml += `<div class="comment-item small d-flex justify-content-between"><div><strong>${c.name}:</strong> ${c.text}</div>${currentAdmin ? `<button class="btn btn-link text-danger p-0" style="font-size:10px" onclick="deleteComment('${key}','${cKey}')">Remove</button>` : ''}</div>`;
+            });
+
+            let repliesHtml = "";
             if(p.replies) Object.values(p.replies).forEach(r => {
-                admHtml += `<div class="admin-reply small"><strong>${r.adminName}:</strong> ${r.text}</div>`;
+                repliesHtml += `<div class="admin-reply small"><strong>${r.adminName} <i class="fas fa-check-circle verified"></i>:</strong> ${r.text}</div>`;
             });
 
             list.innerHTML += `
             <div class="col-12"><div class="card announcement-card">
-                ${p.image ? `<img src="${p.image}" class="post-image" onclick="document.getElementById('modalImg').src=this.src; document.getElementById('imageModal').style.display='flex'">` : ''}
+                ${p.image ? `<img src="${p.image}" class="post-image">` : ''}
                 <div class="card-body p-4">
                     <span class="badge ${badgeClass} mb-2">${status}</span>
                     <h4 class="fw-bold text-uppercase">${p.title}</h4>
                     <p style="white-space: pre-wrap;">${p.content}</p>
-                    <div class="small text-muted border-top pt-2">By: ${p.postedBy} | ${p.datePosted}</div>
+                    <div class="small text-muted border-top pt-2">Posted By: ${p.postedBy} | ${p.datePosted}</div>
                 </div>
                 <div class="interaction-box">
-                    ${admHtml}
+                    <div class="mb-3">${commentsHtml || '<small class="text-muted">No comments yet.</small>'} ${repliesHtml}</div>
+                    <div class="input-group input-group-sm mb-2">
+                        <input type="text" id="n-${key}" class="form-control w-25" placeholder="Name">
+                        <input type="text" id="c-${key}" class="form-control w-50" placeholder="Ask something...">
+                        <button class="btn btn-outline-primary" onclick="addComment('${key}')">Post</button>
+                    </div>
                     <div class="${currentAdmin ? '' : 'hidden'} mt-2">
                         <div class="input-group input-group-sm">
-                            <input type="text" id="r-${key}" class="form-control" placeholder="Admin Reply...">
+                            <input type="text" id="r-${key}" class="form-control" placeholder="Official Admin Reply...">
                             <button class="btn btn-primary" onclick="addReply('${key}')">Reply</button>
                         </div>
                     </div>
@@ -179,11 +199,25 @@
         });
     }
 
+    async function addComment(key) {
+        const name = document.getElementById(`n-${key}`).value || "Student";
+        const text = document.getElementById(`c-${key}`).value;
+        if(!text) return;
+        await fetch(`${BASE_URL}posts/${key}/comments.json`, { method: "POST", body: JSON.stringify({ name, text }) });
+        document.getElementById(`c-${key}`).value = "";
+        syncData();
+    }
+
     async function addReply(key) {
         const text = document.getElementById(`r-${key}`).value;
-        if(!text) return;
+        if(!text || !currentAdmin) return;
         await fetch(`${BASE_URL}posts/${key}/replies.json`, { method: "POST", body: JSON.stringify({ text, adminName: currentAdmin.name }) });
+        document.getElementById(`r-${key}`).value = "";
         syncData();
+    }
+
+    async function deleteComment(postKey, commentKey) {
+        if(confirm("Delete comment?")) { await fetch(`${BASE_URL}posts/${postKey}/comments/${commentKey}.json`, { method: "DELETE" }); syncData(); }
     }
 
     async function login() {
@@ -197,24 +231,24 @@
             document.getElementById('navBtn').innerText = "LOGOUT";
             showSection('adminDashboard');
             syncData();
-        } else { alert("Login Failed. Check if admin is added in Firebase."); }
+        } else { alert("Login failed."); }
     }
 
-    function logout() { currentAdmin = null; document.getElementById('navBtn').innerText = "ADMIN LOGIN"; showSection('publicFeed'); }
+    function logout() { currentAdmin = null; document.getElementById('navBtn').innerText = "LOGIN"; showSection('publicFeed'); }
     function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     function toggleAuth() { if(currentAdmin) logout(); else showSection('loginSection'); }
+    
     function renderAdminHistory() {
         const div = document.getElementById('adminHistory');
-        div.innerHTML = "<h6 class='fw-bold p-2'>Manage Posts</h6>";
+        div.innerHTML = "<h6 class='fw-bold p-2'>Manage Feed</h6>";
         Object.keys(announcementsData).reverse().forEach(key => {
-            div.innerHTML += `<div class="list-group-item d-flex justify-content-between">
-                <small>${announcementsData[key].title}</small>
-                <button class="btn btn-sm btn-danger py-0" onclick="deletePost('${key}')">DEL</button>
-            </div>`;
+            div.innerHTML += `<div class="list-group-item d-flex justify-content-between align-items-center"><small>${announcementsData[key].title}</small><button class="btn btn-sm btn-danger py-0" onclick="deletePost('${key}')">DELETE</button></div>`;
         });
     }
-    async function deletePost(key) { if(confirm("Delete?")) { await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" }); syncData(); } }
+    async function deletePost(key) { if(confirm("Delete post?")) { await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" }); syncData(); } }
+    
     syncData();
+    updateStatus();
 </script>
 </body>
 </html>
