@@ -23,7 +23,7 @@
         .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
         .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
         .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; }
-        #removePhotoBtn { font-size: 0.8rem; margin-top: 5px; }
+        #editPreviewContainer img { border: 2px solid var(--fmnhs-gold); }
     </style>
 </head>
 <body>
@@ -68,18 +68,25 @@
                 <div class="row g-3">
                     <div class="col-md-9"><label class="fw-bold small mb-1">Title</label><input type="text" id="postTitle" class="form-control" required></div>
                     <div class="col-md-3"><label class="fw-bold small mb-1">Status</label><select id="postStatus" class="form-select"><option value="auto">Automatic</option><option value="NEW">NEW</option><option value="OLD">OLD</option></select></div>
+                    
                     <div class="col-12">
-                        <label class="fw-bold small mb-1">Photo (Upload new to change)</label>
+                        <label class="fw-bold small mb-1">Photo Management</label>
+                        <div id="editPreviewContainer" class="mb-2 hidden">
+                            <p class="small text-muted mb-1">Current Image:</p>
+                            <img id="editImgPreview" src="" style="height: 100px; width: auto; display: block; margin-bottom: 10px; border-radius: 8px;">
+                        </div>
                         <input type="file" id="postImage" class="form-control" accept="image/*">
-                        <button type="button" id="removePhotoBtn" class="btn btn-outline-danger btn-sm hidden" onclick="removeExistingPhoto()">
-                            <i class="fas fa-trash"></i> Remove Current Photo
+                        <button type="button" id="removePhotoBtn" class="btn btn-outline-danger btn-sm mt-2 hidden" onclick="removeExistingPhoto()">
+                            <i class="fas fa-trash-alt"></i> Remove Current Photo
                         </button>
                     </div>
+
                     <div class="col-12"><label class="fw-bold small mb-1">Description</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
                     <div class="col-12"><div class="d-flex gap-2"><button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1 py-2">PUBLISH</button><button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL</button></div></div>
                 </div>
             </form>
         </div>
+
         <div class="admin-section shadow-lg">
             <h4 class="fw-bold text-danger mb-3"><i class="fas fa-tasks me-2"></i>Manage Existing Posts</h4>
             <div class="history-table-container"><table class="table table-hover align-middle mb-0"><thead class="table-dark"><tr><th>Date</th><th>Headline</th><th class="text-center">Actions</th></tr></thead><tbody id="adminHistoryTable"></tbody></table></div>
@@ -92,10 +99,12 @@
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
     let announcementsData = {};
     let currentAdmin = null;
-    let isTyping = false;
 
+    // STABLE SYNC: Only runs if no text input is active
     async function syncData() {
-        if (isTyping) return;
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            return; // STOP refresh if user is typing anywhere
+        }
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
             announcementsData = await res.json() || {};
@@ -103,7 +112,7 @@
             if(currentAdmin) renderAdminHistory();
         } catch (e) { }
     }
-    setInterval(syncData, 4000);
+    setInterval(syncData, 5000);
 
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -142,8 +151,8 @@
                     <div class="comment-box">
                         <div id="comment-list-${key}">${commentsHtml || '<p class="text-muted small">No comments yet.</p>'}</div>
                         <div class="input-group mt-3">
-                            <input type="text" onfocus="isTyping=true" onblur="isTyping=false" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" placeholder="Name">
-                            <input type="text" onfocus="isTyping=true" onblur="isTyping=false" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
+                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" placeholder="Name">
+                            <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
                             <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
                         </div>
                     </div>
@@ -156,7 +165,7 @@
         const nameVal = document.getElementById(`name-${postKey}`).value.trim() || "Guest";
         const textVal = document.getElementById(`text-${postKey}`).value.trim();
         if (!textVal) return;
-        isTyping = false;
+        
         await fetch(`${BASE_URL}posts/${postKey}/comments.json`, {
             method: "POST",
             body: JSON.stringify({ name: nameVal, text: textVal })
@@ -172,6 +181,7 @@
         }
     }
 
+    // ADMIN FUNCTIONS
     async function login() {
         const user = document.getElementById('adminUser').value;
         const pass = document.getElementById('adminPass').value;
@@ -202,9 +212,19 @@
         document.getElementById('postStatus').value = p.manualStatus || "auto";
         document.getElementById('existingImgData').value = p.image || "";
         
-        // Show/Hide remove photo button
-        if(p.image) document.getElementById('removePhotoBtn').classList.remove('hidden');
-        else document.getElementById('removePhotoBtn').classList.add('hidden');
+        // Handling Preview & Remove Button
+        const previewCont = document.getElementById('editPreviewContainer');
+        const previewImg = document.getElementById('editImgPreview');
+        const removeBtn = document.getElementById('removePhotoBtn');
+
+        if(p.image) {
+            previewImg.src = p.image;
+            previewCont.classList.remove('hidden');
+            removeBtn.classList.remove('hidden');
+        } else {
+            previewCont.classList.add('hidden');
+            removeBtn.classList.add('hidden');
+        }
 
         document.getElementById('formTitle').innerText = "Editing Post...";
         document.getElementById('submitBtn').innerText = "UPDATE POST";
@@ -213,9 +233,10 @@
     }
 
     function removeExistingPhoto() {
-        if(confirm("Are you sure you want to remove this photo?")) {
+        if(confirm("Permanently remove the photo?")) {
             document.getElementById('existingImgData').value = "";
             document.getElementById('postImage').value = "";
+            document.getElementById('editPreviewContainer').classList.add('hidden');
             document.getElementById('removePhotoBtn').classList.add('hidden');
         }
     }
@@ -224,6 +245,7 @@
         document.getElementById('postForm').reset();
         document.getElementById('editKey').value = "";
         document.getElementById('existingImgData').value = "";
+        document.getElementById('editPreviewContainer').classList.add('hidden');
         document.getElementById('removePhotoBtn').classList.add('hidden');
         document.getElementById('formTitle').innerText = "Create New Announcement";
         document.getElementById('submitBtn').innerText = "PUBLISH";
@@ -242,13 +264,7 @@
         const editKey = document.getElementById('editKey').value;
         const imgFile = document.getElementById('postImage').files[0];
         
-        let imgBase64 = "";
-        if (imgFile) {
-            imgBase64 = await toBase64(imgFile);
-        } else {
-            // Keep existing (which might be empty if "Remove Photo" was clicked)
-            imgBase64 = document.getElementById('existingImgData').value;
-        }
+        let imgBase64 = imgFile ? await toBase64(imgFile) : document.getElementById('existingImgData').value;
 
         const post = {
             title: document.getElementById('postTitle').value,
