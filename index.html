@@ -8,21 +8,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --fmnhs-blue: #1a4b8c; --fmnhs-gold: #ffcc00; }
+        
         body { 
             background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('fmnhs.jpg'); 
             background-size: cover; background-attachment: fixed; background-position: center;
             font-family: 'Segoe UI', Tahoma, sans-serif; 
         }
+
         .navbar { background-color: var(--fmnhs-blue) !important; border-bottom: 4px solid var(--fmnhs-gold); }
         .school-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: white; border-radius: 50%; }
+        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; transition: all 0.3s ease; }
         .hidden { display: none !important; }
+        
         .admin-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .history-table-container { max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
+        
         .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; }
         .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
+        
         .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
-        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; position: relative; }
         .search-container { max-width: 600px; margin: 0 auto 30px auto; }
-        .reply-text { color: #1a4b8c; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -33,14 +39,18 @@
             <img src="logofmnhs.jpg" alt="Logo" class="school-logo"> 
             <span>MILITARIANS TODAY</span>
         </div>
-        <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">LOGIN</button>
+        <div class="d-flex align-items-center gap-3">
+            <span id="liveStatus" class="status-badge bg-success text-white"><i class="fas fa-circle small"></i> Online</span>
+            <button class="btn btn-warning btn-sm fw-bold shadow-sm" id="navBtn" onclick="toggleAuth()">LOGIN</button>
+        </div>
     </div>
 </nav>
 
 <div class="container mb-5">
+    
     <section id="publicFeed">
-        <div class="text-center mb-4">
-            <h1 class="fw-bold" style="color: var(--fmnhs-blue);">CAMPUS BULLETIN</h1>
+        <div class="text-center mb-5">
+            <h1 class="fw-bold" style="color: var(--fmnhs-blue); letter-spacing: 1px;">CAMPUS BULLETIN</h1>
             <p class="fw-bold text-secondary">Official School Announcements</p>
         </div>
 
@@ -64,98 +74,200 @@
     </section>
 
     <section id="adminDashboard" class="hidden">
+        
         <div class="admin-section" style="border-top: 6px solid var(--fmnhs-blue);">
-            <h4 id="formTitle" class="fw-bold text-primary mb-4">Post Management</h4>
+            <h4 id="formTitle" class="fw-bold text-primary mb-4"><i class="fas fa-plus-circle me-2"></i>Create New Announcement</h4>
             <form id="postForm">
                 <input type="hidden" id="editKey">
                 <input type="hidden" id="existingImgData">
                 <div class="row g-3">
-                    <div class="col-md-9"><label class="fw-bold small mb-1">Headline</label><input type="text" id="postTitle" class="form-control" required></div>
-                    <div class="col-md-3"><label class="fw-bold small mb-1">Status</label><select id="postStatus" class="form-select"><option value="auto">Automatic</option><option value="NEW">NEW</option><option value="OLD">OLD</option></select></div>
+                    <div class="col-md-7">
+                        <label class="fw-bold small mb-1">Title</label>
+                        <input type="text" id="postTitle" class="form-control" placeholder="What's the news?" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="fw-bold small mb-1">Status</label>
+                        <select id="postStatus" class="form-select" onchange="toggleScheduleDate()">
+                            <option value="auto">Automatic</option>
+                            <option value="NEW">NEW</option>
+                            <option value="OLD">OLD</option>
+                            <option value="SCHEDULED">SCHEDULED</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="fw-bold small mb-1">Release Date (If Scheduled)</label>
+                        <input type="datetime-local" id="scheduleDate" class="form-control hidden">
+                    </div>
                     <div class="col-12">
-                        <label class="fw-bold small mb-1">Photo</label>
+                        <label class="fw-bold small mb-1">Upload Photo (Poster/Event Image)</label>
                         <div id="editPreviewContainer" class="mb-2 hidden">
-                            <img id="editImgPreview" src="" style="height: 100px; border-radius: 8px; border: 2px solid var(--fmnhs-gold);">
+                            <img id="editImgPreview" src="" style="height: 80px; border-radius: 5px; border: 1px solid #ddd;">
+                            <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeExistingPhoto()">Remove</button>
                         </div>
                         <input type="file" id="postImage" class="form-control" accept="image/*">
-                        <button type="button" id="removePhotoBtn" class="btn btn-outline-danger btn-sm mt-2 hidden" onclick="removeExistingPhoto()">Remove Photo</button>
                     </div>
-                    <div class="col-12"><label class="fw-bold small mb-1">Content</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
-                    <div class="col-12"><div class="d-flex gap-2"><button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1">PUBLISH</button><button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL</button></div></div>
+                    <div class="col-12">
+                        <label class="fw-bold small mb-1">Description</label>
+                        <textarea id="postContent" class="form-control" rows="4" placeholder="Type the full details here..." required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1 py-2">PUBLISH TO BULLETIN</button>
+                            <button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL</button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
+
         <div class="admin-section shadow-lg">
-            <h4 class="fw-bold text-danger mb-3">Announcement History</h4>
-            <div class="table-responsive"><table class="table table-hover align-middle"><tbody id="adminHistoryTable"></tbody></table></div>
-            <div class="text-center mt-3"><button class="btn btn-link text-danger text-decoration-none fw-bold" onclick="logout()">Logout Account</button></div>
+            <h4 class="fw-bold text-danger mb-3"><i class="fas fa-tasks me-2"></i>Manage Existing Posts</h4>
+            <div class="history-table-container">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 150px;">Date</th>
+                            <th>Announcement Headline</th>
+                            <th class="text-center" style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminHistoryTable"></tbody>
+                </table>
+            </div>
+            <div class="text-center mt-4">
+                <button class="btn btn-link text-danger text-decoration-none fw-bold" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout Session
+                </button>
+            </div>
         </div>
+
     </section>
 </div>
 
 <script>
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
     let announcementsData = {};
+    // Keep Admin session on refresh
     let currentAdmin = JSON.parse(localStorage.getItem('adminSession'));
 
-    // STABLE SYNC
+    // --- ONLINE/OFFLINE INDICATOR ---
+    function updateOnlineStatus() {
+        const badge = document.getElementById('liveStatus');
+        if (navigator.onLine) {
+            badge.innerHTML = '<i class="fas fa-circle small"></i> Online';
+            badge.className = 'status-badge bg-success text-white';
+            syncData();
+        } else {
+            badge.innerHTML = '<i class="fas fa-circle-notch fa-spin small"></i> Offline';
+            badge.className = 'status-badge bg-danger text-white';
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
     async function syncData() {
+        if (!navigator.onLine) return;
         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
-            announcementsData = await res.json() || {};
+            const data = await res.json() || {};
+            announcementsData = data;
             renderAnnouncements();
             if(currentAdmin) renderAdminHistory();
         } catch (e) { }
     }
     setInterval(syncData, 5000);
 
-    // SEARCH FILTER
+    // --- DRAFT AUTO-SAVE ---
+    function saveDraft() {
+        if (!currentAdmin || document.getElementById('editKey').value) return;
+        const draft = {
+            title: document.getElementById('postTitle').value,
+            content: document.getElementById('postContent').value
+        };
+        localStorage.setItem('adminDraft', JSON.stringify(draft));
+    }
+    document.getElementById('postTitle').addEventListener('input', saveDraft);
+    document.getElementById('postContent').addEventListener('input', saveDraft);
+
+    function loadDraft() {
+        const saved = JSON.parse(localStorage.getItem('adminDraft'));
+        if (saved && !document.getElementById('editKey').value) {
+            document.getElementById('postTitle').value = saved.title || "";
+            document.getElementById('postContent').value = saved.content || "";
+        }
+    }
+
+    function toggleScheduleDate() {
+        const status = document.getElementById('postStatus').value;
+        document.getElementById('scheduleDate').classList.toggle('hidden', status !== 'SCHEDULED');
+    }
+
     function filterPosts() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        document.querySelectorAll('.post-container').forEach(card => {
-            const match = card.innerText.toLowerCase().includes(query);
-            card.classList.toggle('hidden', !match);
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.post-wrapper').forEach(p => {
+            p.classList.toggle('hidden', !p.innerText.toLowerCase().includes(q));
         });
     }
+
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
 
     function renderAnnouncements() {
         const list = document.getElementById('announcementsList');
         list.innerHTML = "";
+        const now = new Date();
+
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            let badge = p.manualStatus === "NEW" ? `<span class="badge bg-success me-2">NEW</span>` : (p.manualStatus === "OLD" ? `<span class="badge bg-secondary me-2">OLD</span>` : "");
             
+            // Post Scheduling Check
+            if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !currentAdmin) {
+                if (now < new Date(p.scheduledTime)) return;
+            }
+
+            let badge = "";
+            if(p.manualStatus === "NEW") badge = `<span class="badge bg-success me-2">NEW</span>`;
+            else if(p.manualStatus === "OLD") badge = `<span class="badge bg-secondary me-2">OLD</span>`;
+            else if(p.manualStatus === "SCHEDULED" && currentAdmin) badge = `<span class="badge bg-info text-dark me-2">SCHEDULED</span>`;
+
             let commentsHtml = "";
             if (p.comments) {
                 Object.keys(p.comments).forEach(cKey => {
                     const c = p.comments[cKey];
                     commentsHtml += `
-                    <div class="comment-bubble d-flex justify-content-between align-items-start">
-                        <div><strong>${c.name}:</strong> ${c.text}</div>
-                        ${currentAdmin ? `<div>
-                            <button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}', '${c.name}')"><i class="fas fa-reply"></i></button>
-                            <button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}', '${cKey}')"><i class="fas fa-trash"></i></button>
-                        </div>` : ''}
-                    </div>`;
+                        <div class="comment-bubble d-flex justify-content-between align-items-center">
+                            <span><strong>${c.name}:</strong> ${c.text}</span>
+                            ${currentAdmin ? `<div>
+                                <button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}', '${c.name}')"><i class="fas fa-reply"></i></button>
+                                <button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}', '${cKey}')"><i class="fas fa-times-circle"></i></button>
+                            </div>` : ''}
+                        </div>`;
                 });
             }
 
             list.innerHTML += `
-            <div class="col-md-9 col-lg-8 post-container">
+            <div class="col-md-9 col-lg-8 post-wrapper">
                 <div class="card announcement-card">
-                    ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
+                    ${p.image ? `<img src="${p.image}" class="post-img" alt="Post Image">` : ''}
                     <div class="card-body p-4">
-                        <h3 class="fw-bold text-primary">${badge}${p.title}</h3>
-                        <p style="white-space: pre-wrap;">${p.content}</p>
+                        <h3 class="fw-bold text-primary mb-3">${badge}${p.title}</h3>
+                        <p style="white-space: pre-wrap; font-size: 1.1rem; color: #333;">${p.content}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <small class="text-muted"><i class="fas fa-user-edit"></i> Posted by ${p.postedBy || 'Admin'}</small>
+                            <small class="text-muted"><i class="fas fa-calendar-alt"></i> ${p.datePosted}</small>
+                        </div>
                     </div>
                     <div class="comment-box">
-                        <div id="comment-list-${key}">${commentsHtml || '<p class="text-muted small">No comments yet.</p>'}</div>
-                        <div class="input-group mt-3">
-                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" 
-                                   placeholder="Name" ${currentAdmin ? `value="Admin" readonly` : ''}>
+                        <div id="comments-${key}">${commentsHtml || '<p class="text-muted small m-0">No comments yet.</p>'}</div>
+                        <div class="input-group mt-3 shadow-sm">
+                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 120px;" placeholder="Name" ${currentAdmin ? 'value="Admin" readonly' : ''}>
                             <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
-                            <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
+                            <button class="btn btn-primary btn-sm px-3" onclick="addComment('${key}')">POST</button>
                         </div>
                     </div>
                 </div>
@@ -164,30 +276,45 @@
         filterPosts();
     }
 
-    // ADMIN ACTIONS
+    function renderAdminHistory() {
+        const tbody = document.getElementById('adminHistoryTable');
+        tbody.innerHTML = "";
+        Object.keys(announcementsData).reverse().forEach(key => {
+            const p = announcementsData[key];
+            tbody.innerHTML += `
+            <tr>
+                <td class="small text-muted">${p.datePosted.split(',')[0]}</td>
+                <td class="fw-bold">${p.title}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary fw-bold me-1" onclick="startEdit('${key}')">EDIT</button>
+                    <button class="btn btn-sm btn-outline-danger fw-bold" onclick="deletePost('${key}')">DELETE</button>
+                </td>
+            </tr>`;
+        });
+    }
+
     function prepareReply(key, name) {
         const input = document.getElementById(`text-${key}`);
         input.value = `@${name} `;
         input.focus();
     }
 
-    async function addComment(key) {
-        const txt = document.getElementById(`text-${key}`).value.trim();
-        const nm = document.getElementById(`name-${key}`).value.trim() || "Guest";
-        if(!txt) return;
-        await fetch(`${BASE_URL}posts/${key}/comments.json`, { method: "POST", body: JSON.stringify({name: nm, text: txt}) });
-        document.getElementById(`text-${key}`).value = "";
+    async function addComment(postKey) {
+        const name = document.getElementById(`name-${postKey}`).value.trim() || "Guest";
+        const text = document.getElementById(`text-${postKey}`).value.trim();
+        if (!text) return;
+        await fetch(`${BASE_URL}posts/${postKey}/comments.json`, { method: "POST", body: JSON.stringify({ name, text }) });
+        document.getElementById(`text-${postKey}`).value = "";
         syncData();
     }
 
-    async function deleteComment(pk, ck) {
-        if(confirm("Delete this comment?")) {
-            await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, { method: "DELETE" });
+    async function deleteComment(postKey, commentKey) {
+        if(confirm("Confirm delete this comment?")) {
+            await fetch(`${BASE_URL}posts/${postKey}/comments/${commentKey}.json`, { method: "DELETE" });
             syncData();
         }
     }
 
-    // SESSION & LOGIN
     async function login() {
         const user = document.getElementById('adminUser').value;
         const pass = document.getElementById('adminPass').value;
@@ -196,106 +323,102 @@
         if(data && data.password === pass) {
             currentAdmin = { name: data.name };
             localStorage.setItem('adminSession', JSON.stringify(currentAdmin));
-            location.reload();
-        } else { alert("Invalid Credentials!"); }
+            showSection('adminDashboard');
+            document.getElementById('navBtn').innerText = "LOGOUT";
+            loadDraft();
+            syncData();
+        } else { alert("Access Denied!"); }
     }
-
-    function logout() { localStorage.removeItem('adminSession'); location.reload(); }
-
-    function toggleAuth() { 
-        if(currentAdmin) logout(); 
-        else { showSection('loginSection'); window.scrollTo(0,0); }
-    }
-
-    function showSection(id) { 
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); 
-        document.getElementById(id).classList.remove('hidden'); 
-    }
-
-    // IMAGE LOGIC
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
 
     function startEdit(key) {
         const p = announcementsData[key];
         document.getElementById('editKey').value = key;
         document.getElementById('postTitle').value = p.title;
         document.getElementById('postContent').value = p.content;
+        document.getElementById('postStatus').value = p.manualStatus || "auto";
         document.getElementById('existingImgData').value = p.image || "";
+        document.getElementById('scheduleDate').value = p.scheduledTime || "";
+        
         if(p.image) {
             document.getElementById('editImgPreview').src = p.image;
             document.getElementById('editPreviewContainer').classList.remove('hidden');
-            document.getElementById('removePhotoBtn').classList.remove('hidden');
         }
-        document.getElementById('formTitle').innerText = "Edit Announcement";
-        document.getElementById('submitBtn').innerText = "UPDATE";
+        
+        toggleScheduleDate();
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit text-warning"></i> Editing Post...';
+        document.getElementById('submitBtn').innerText = "UPDATE POST";
+        document.getElementById('submitBtn').className = "btn btn-warning fw-bold flex-grow-1 py-2";
         document.getElementById('cancelBtn').classList.remove('hidden');
-        window.scrollTo(0,0);
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function cancelEdit() {
         document.getElementById('postForm').reset();
         document.getElementById('editKey').value = "";
+        document.getElementById('existingImgData').value = "";
         document.getElementById('editPreviewContainer').classList.add('hidden');
-        document.getElementById('removePhotoBtn').classList.add('hidden');
+        document.getElementById('scheduleDate').classList.add('hidden');
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i>Create New Announcement';
+        document.getElementById('submitBtn').innerText = "PUBLISH TO BULLETIN";
+        document.getElementById('submitBtn').className = "btn btn-primary fw-bold flex-grow-1 py-2";
         document.getElementById('cancelBtn').classList.add('hidden');
-        document.getElementById('formTitle').innerText = "Post Management";
-        document.getElementById('submitBtn').innerText = "PUBLISH";
     }
 
     function removeExistingPhoto() {
         document.getElementById('existingImgData').value = "";
         document.getElementById('editPreviewContainer').classList.add('hidden');
-        document.getElementById('removePhotoBtn').classList.add('hidden');
-    }
-
-    function renderAdminHistory() {
-        const tbody = document.getElementById('adminHistoryTable');
-        tbody.innerHTML = "";
-        Object.keys(announcementsData).reverse().forEach(key => {
-            const p = announcementsData[key];
-            tbody.innerHTML += `<tr><td class="fw-bold">${p.title}</td><td class="text-end">
-                <button class="btn btn-sm btn-primary me-1" onclick="startEdit('${key}')">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">Del</button>
-            </td></tr>`;
-        });
     }
 
     async function deletePost(key) {
-        if(confirm("Delete post?")) { await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" }); syncData(); }
+        if(confirm("Delete this entire announcement?")) {
+            await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" });
+            syncData();
+        }
     }
 
-    document.getElementById('postForm').addEventListener('submit', async (e) => {
+    document.getElementById('postForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const ek = document.getElementById('editKey').value;
-        const file = document.getElementById('postImage').files[0];
-        const imgBase = file ? await toBase64(file) : document.getElementById('existingImgData').value;
-        
-        const postData = {
+        const editKey = document.getElementById('editKey').value;
+        const imgFile = document.getElementById('postImage').files[0];
+        let imgBase64 = imgFile ? await toBase64(imgFile) : document.getElementById('existingImgData').value;
+
+        const post = {
             title: document.getElementById('postTitle').value,
             content: document.getElementById('postContent').value,
             manualStatus: document.getElementById('postStatus').value,
-            image: imgBase,
-            postedBy: ek ? announcementsData[ek].postedBy : currentAdmin.name,
-            datePosted: ek ? announcementsData[ek].datePosted : new Date().toLocaleString()
+            scheduledTime: document.getElementById('scheduleDate').value,
+            image: imgBase64,
+            postedBy: editKey ? announcementsData[editKey].postedBy : currentAdmin.name,
+            datePosted: editKey ? announcementsData[editKey].datePosted : new Date().toLocaleString()
         };
 
-        await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { 
-            method: ek ? "PATCH" : "POST", 
-            body: JSON.stringify(postData) 
-        });
+        const url = editKey ? `${BASE_URL}posts/${editKey}.json` : `${BASE_URL}posts.json`;
+        await fetch(url, { method: editKey ? "PATCH" : "POST", body: JSON.stringify(post) });
+        localStorage.removeItem('adminDraft');
         cancelEdit();
         syncData();
     });
 
-    // STARTUP
+    function logout() { 
+        currentAdmin = null; 
+        localStorage.removeItem('adminSession');
+        document.getElementById('navBtn').innerText = "LOGIN"; 
+        showSection('publicFeed'); 
+    }
+    
+    function showSection(id) { 
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); 
+        document.getElementById(id).classList.remove('hidden'); 
+    }
+    
+    function toggleAuth() { if(currentAdmin) logout(); else showSection('loginSection'); }
+
+    // On Load
+    updateOnlineStatus();
     if(currentAdmin) {
         showSection('adminDashboard');
         document.getElementById('navBtn').innerText = "LOGOUT";
+        loadDraft();
     }
     syncData();
 </script>
