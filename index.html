@@ -218,64 +218,76 @@
     });
 
     function renderAnnouncements() {
-        const list = document.getElementById('announcementsList');
-        list.innerHTML = "";
-        const now = new Date();
+    const list = document.getElementById('announcementsList');
+    list.innerHTML = "";
+    const now = new Date();
 
-        Object.keys(announcementsData).reverse().forEach(key => {
-            const p = announcementsData[key];
-            
-            // Post Scheduling Check
-            if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !currentAdmin) {
-                if (now < new Date(p.scheduledTime)) return;
-            }
+    Object.keys(announcementsData).reverse().forEach(key => {
+        const p = announcementsData[key];
+        
+        // Post Scheduling Check
+        if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !currentAdmin) {
+            if (now < new Date(p.scheduledTime)) return;
+        }
 
-            let badge = "";
-            if(p.manualStatus === "NEW") badge = `<span class="badge bg-success me-2">NEW</span>`;
-            else if(p.manualStatus === "OLD") badge = `<span class="badge bg-secondary me-2">OLD</span>`;
-            else if(p.manualStatus === "SCHEDULED" && currentAdmin) badge = `<span class="badge bg-info text-dark me-2">SCHEDULED</span>`;
+        let badge = "";
+        if(p.manualStatus === "NEW") badge = `<span class="badge bg-success me-2">NEW</span>`;
+        else if(p.manualStatus === "OLD") badge = `<span class="badge bg-secondary me-2">OLD</span>`;
+        else if(p.manualStatus === "SCHEDULED" && currentAdmin) badge = `<span class="badge bg-info text-dark me-2">SCHEDULED</span>`;
 
-            let commentsHtml = "";
-            if (p.comments) {
-                Object.keys(p.comments).forEach(cKey => {
-                    const c = p.comments[cKey];
-                    commentsHtml += `
-                        <div class="comment-bubble d-flex justify-content-between align-items-center">
-                            <span><strong>${c.name}:</strong> ${c.text}</span>
-                            ${currentAdmin ? `<div>
-                                <button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}', '${c.name}')"><i class="fas fa-reply"></i></button>
-                                <button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}', '${cKey}')"><i class="fas fa-times-circle"></i></button>
-                            </div>` : ''}
+        let commentsHtml = "";
+        if (p.comments) {
+            Object.keys(p.comments).forEach(cKey => {
+                const c = p.comments[cKey];
+                
+                // --- SIGURADUHING NAKALABAS ANG MGA BUTTONS NA ITO ---
+                let adminButtons = "";
+                if (currentAdmin) {
+                    adminButtons = `
+                        <div class="ms-2">
+                            <button class="btn btn-sm text-primary p-0 me-2" title="Reply" onclick="prepareReply('${key}', '${c.name}')">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button class="btn btn-sm text-danger p-0" title="Delete Comment" onclick="deleteComment('${key}', '${cKey}')">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
                         </div>`;
-                });
-            }
+                }
 
-            list.innerHTML += `
-            <div class="col-md-9 col-lg-8 post-wrapper">
-                <div class="card announcement-card">
-                    ${p.image ? `<img src="${p.image}" class="post-img" alt="Post Image">` : ''}
-                    <div class="card-body p-4">
-                        <h3 class="fw-bold text-primary mb-3">${badge}${p.title}</h3>
-                        <p style="white-space: pre-wrap; font-size: 1.1rem; color: #333;">${p.content}</p>
-                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                            <small class="text-muted"><i class="fas fa-user-edit"></i> Posted by ${p.postedBy || 'Admin'}</small>
-                            <small class="text-muted"><i class="fas fa-calendar-alt"></i> ${p.datePosted}</small>
-                        </div>
-                    </div>
-                    <div class="comment-box">
-                        <div id="comments-${key}">${commentsHtml || '<p class="text-muted small m-0">No comments yet.</p>'}</div>
-                        <div class="input-group mt-3 shadow-sm">
-                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 120px;" placeholder="Name" ${currentAdmin ? 'value="Admin" readonly' : ''}>
-                            <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
-                            <button class="btn btn-primary btn-sm px-3" onclick="addComment('${key}')">POST</button>
-                        </div>
+                commentsHtml += `
+                    <div class="comment-bubble d-flex justify-content-between align-items-center">
+                        <span style="word-break: break-word;"><strong>${c.name}:</strong> ${c.text}</span>
+                        ${adminButtons}
+                    </div>`;
+            });
+        }
+
+        list.innerHTML += `
+        <div class="col-md-9 col-lg-8 post-wrapper">
+            <div class="card announcement-card">
+                ${p.image ? `<img src="${p.image}" class="post-img" alt="Post Image">` : ''}
+                <div class="card-body p-4">
+                    <h3 class="fw-bold text-primary mb-3">${badge}${p.title}</h3>
+                    <p style="white-space: pre-wrap; font-size: 1.1rem; color: #333;">${p.content}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <small class="text-muted"><i class="fas fa-user-edit"></i> Posted by ${p.postedBy || 'Admin'}</small>
+                        <small class="text-muted"><i class="fas fa-calendar-alt"></i> ${p.datePosted}</small>
                     </div>
                 </div>
-            </div>`;
-        });
-        filterPosts();
-    }
-
+                <div class="comment-box">
+                    <div id="comments-${key}">${commentsHtml || '<p class="text-muted small m-0">No comments yet.</p>'}</div>
+                    <div class="input-group mt-3 shadow-sm">
+                        <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 120px;" 
+                               placeholder="Name" ${currentAdmin ? 'value="Admin" readonly' : ''}>
+                        <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
+                        <button class="btn btn-primary btn-sm px-3" onclick="addComment('${key}')">POST</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    });
+    filterPosts();
+}
     function renderAdminHistory() {
         const tbody = document.getElementById('adminHistoryTable');
         tbody.innerHTML = "";
@@ -424,3 +436,4 @@
 </script>
 </body>
 </html>
+
