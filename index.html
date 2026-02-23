@@ -3,53 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Militarians Today | FMNHS</title>
+    <title>Militarians Today | FMNHS Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --fmnhs-blue: #1a4b8c; --fmnhs-gold: #ffcc00; }
-        body { 
-            background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('fmnhs.jpg'); 
-            background-size: cover; background-attachment: fixed; background-position: center;
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-        }
+        body { background: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
         .navbar { background-color: var(--fmnhs-blue) !important; border-bottom: 4px solid var(--fmnhs-gold); }
         .school-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: white; border-radius: 50%; }
-        .status-badge { font-size: 0.65rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; text-transform: uppercase; }
-        .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; overflow: hidden; }
-        .post-image { width: 100%; max-height: 350px; object-fit: cover; }
-        .comment-section { background: #f8f9fa; border-top: 1px solid #eee; padding: 15px; }
         .hidden { display: none; }
-        .admin-history-list { max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
+        
+        /* Layout Styles */
+        .admin-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .history-table-container { max-height: 450px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
+        .table thead { background: #212529; color: white; position: sticky; top: 0; z-index: 10; }
+        
+        .announcement-card { border: none; border-left: 5px solid var(--fmnhs-blue); margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background: white; }
     </style>
 </head>
 <body>
 
 <nav class="navbar navbar-dark sticky-top mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-        <div class="navbar-brand d-flex align-items-center fw-bold m-0" onclick="location.reload()" style="cursor:pointer">
+    <div class="container d-flex justify-content-between">
+        <div class="navbar-brand d-flex align-items-center fw-bold" onclick="location.reload()" style="cursor:pointer">
             <img src="logofmnhs.jpg" alt="Logo" class="school-logo"> 
             <span>MILITARIANS TODAY</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <span id="liveStatus" class="status-badge bg-success text-white">Online</span>
-            <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">LOGIN</button>
-        </div>
+        <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">LOGIN</button>
     </div>
 </nav>
 
 <div class="container mb-5">
+    
     <section id="publicFeed">
         <div class="text-center mb-4">
             <h1 class="fw-bold">CAMPUS BULLETIN</h1>
-            <p class="text-secondary">Official Online Information Center of FMNHS</p>
+            <p class="text-secondary">Official School Announcements</p>
         </div>
         <div id="announcementsList" class="row"></div>
     </section>
 
     <section id="loginSection" class="hidden">
         <div class="card shadow-sm p-4 mx-auto border-0" style="max-width: 350px; margin-top: 50px;">
-            <div class="text-center mb-3"><h6 class="fw-bold">ADMIN ACCESS</h6></div>
+            <h5 class="text-center fw-bold mb-3">ADMIN ACCESS</h5>
             <input type="text" id="adminUser" class="form-control mb-2" placeholder="Username">
             <input type="password" id="adminPass" class="form-control mb-3" placeholder="Password">
             <button class="btn btn-primary w-100 fw-bold" onclick="login()">SIGN IN</button>
@@ -57,38 +53,60 @@
     </section>
 
     <section id="adminDashboard" class="hidden">
-        <div class="row">
-            <div class="col-md-7">
-                <div class="card shadow-sm p-4 mb-4">
-                    <h5 id="formTitle" class="fw-bold mb-3 text-primary">Create New Post</h5>
-                    <form id="postForm">
-                        <input type="hidden" id="editKey">
-                        <div class="row g-2">
-                            <input type="text" id="postTitle" class="form-control mb-2" placeholder="Announcement Title" required>
-                            <div class="col-6">
-                                <select id="postStatus" class="form-select">
-                                    <option value="auto">Auto Status</option>
-                                    <option value="NEW">NEW</option>
-                                    <option value="OLD">OLD</option>
-                                </select>
-                            </div>
-                            <div class="col-6"><input type="file" id="postImage" class="form-control" accept="image/*"></div>
-                            <textarea id="postContent" class="form-control mb-2" rows="4" placeholder="Announcement details..." required></textarea>
-                            <button type="submit" id="submitBtn" class="btn btn-success w-100 fw-bold">POST TO BULLETIN</button>
-                            <button type="button" id="cancelEditBtn" class="btn btn-secondary w-100 mt-2 hidden" onclick="cancelEdit()">CANCEL EDIT</button>
+        
+        <div class="admin-section border-primary" style="border-top: 6px solid var(--fmnhs-blue);">
+            <h4 id="formTitle" class="fw-bold text-primary mb-4"><i class="fas fa-plus-circle"></i> Create New Announcement</h4>
+            <form id="postForm">
+                <input type="hidden" id="editKey">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Title</label>
+                        <input type="text" id="postTitle" class="form-control" placeholder="Enter headline..." required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Status</label>
+                        <select id="postStatus" class="form-select">
+                            <option value="auto">Automatic (New/Old)</option>
+                            <option value="NEW">Always NEW</option>
+                            <option value="OLD">Always OLD</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Content Details</label>
+                        <textarea id="postContent" class="form-control" rows="5" placeholder="Type the full announcement here..." required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg fw-bold flex-grow-1">PUBLISH TO BULLETIN</button>
+                            <button type="button" id="cancelBtn" class="btn btn-secondary btn-lg hidden" onclick="cancelEdit()">CANCEL EDIT</button>
                         </div>
-                    </form>
+                    </div>
                 </div>
+            </form>
+        </div>
+
+        <div class="admin-section">
+            <h4 class="fw-bold text-danger mb-3"><i class="fas fa-edit"></i> Manage Existing Posts</h4>
+            <div class="history-table-container">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Announcement Title</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminHistoryTable">
+                        </tbody>
+                </table>
             </div>
-            <div class="col-md-5">
-                <div class="card shadow-sm p-4 mb-4">
-                    <h5 class="fw-bold mb-3 text-danger">Manage Existing Posts</h5>
-                    <div id="adminHistory" class="list-group admin-history-list">
-                        </div>
-                    <button class="btn btn-outline-danger btn-sm w-100 mt-3" onclick="logout()">Logout Admin</button>
-                </div>
+            <div class="text-center mt-4 pt-3 border-top">
+                <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout Administrator
+                </button>
             </div>
         </div>
+
     </section>
 </div>
 
@@ -114,31 +132,35 @@
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
             list.innerHTML += `
-            <div class="col-12"><div class="card announcement-card">
-                ${p.image ? `<img src="${p.image}" class="post-image">` : ''}
-                <div class="card-body p-4">
-                    <h4 class="fw-bold">${p.title}</h4>
-                    <p style="white-space: pre-wrap;">${p.content}</p>
-                    <small class="text-muted">By: ${p.postedBy} | ${p.datePosted}</small>
-                </div>
+            <div class="col-12"><div class="card announcement-card p-3">
+                <h5 class="fw-bold m-0 text-primary">${p.title}</h5>
+                <small class="text-muted">${p.datePosted}</small>
+                <p class="mt-2" style="white-space: pre-wrap;">${p.content}</p>
             </div></div>`;
         });
     }
 
     function renderAdminHistory() {
-        const div = document.getElementById('adminHistory');
-        div.innerHTML = "";
+        const tbody = document.getElementById('adminHistoryTable');
+        tbody.innerHTML = "";
         const keys = Object.keys(announcementsData).reverse();
-        if(keys.length === 0) div.innerHTML = "<p class='text-muted p-2'>No posts yet.</p>";
+        
+        if(keys.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='3' class='text-center text-muted py-3'>No posts found.</td></tr>";
+            return;
+        }
+
         keys.forEach(key => {
-            div.innerHTML += `
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="text-truncate" style="max-width: 150px;"><strong>${announcementsData[key].title}</strong></div>
-                <div>
-                    <button class="btn btn-sm btn-primary" onclick="startEdit('${key}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>`;
+            const p = announcementsData[key];
+            tbody.innerHTML += `
+            <tr>
+                <td><small>${p.datePosted.split(',')[0]}</small></td>
+                <td class="fw-bold">${p.title}</td>
+                <td class="text-center" style="width: 180px;">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="startEdit('${key}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deletePost('${key}')"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
         });
     }
 
@@ -160,53 +182,41 @@
         document.getElementById('editKey').value = key;
         document.getElementById('postTitle').value = p.title;
         document.getElementById('postContent').value = p.content;
-        document.getElementById('formTitle').innerText = "Editing Post...";
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit text-warning"></i> Editing Post...';
         document.getElementById('submitBtn').innerText = "UPDATE POST";
-        document.getElementById('cancelEditBtn').classList.remove('hidden');
-        window.scrollTo(0,0);
-    }
-
-    async function deletePost(key) {
-        if(confirm("Are you sure?")) {
-            await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" });
-            syncData();
-        }
+        document.getElementById('submitBtn').className = "btn btn-warning btn-lg fw-bold flex-grow-1";
+        document.getElementById('cancelBtn').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
         document.getElementById('postForm').reset();
         document.getElementById('editKey').value = "";
-        document.getElementById('formTitle').innerText = "Create New Post";
-        document.getElementById('submitBtn').innerText = "POST TO BULLETIN";
-        document.getElementById('cancelEditBtn').classList.add('hidden');
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Create New Announcement';
+        document.getElementById('submitBtn').innerText = "PUBLISH TO BULLETIN";
+        document.getElementById('submitBtn').className = "btn btn-primary btn-lg fw-bold flex-grow-1";
+        document.getElementById('cancelBtn').classList.add('hidden');
     }
 
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
+    async function deletePost(key) {
+        if(confirm("Burahin ang announcement na ito?")) {
+            await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" });
+            syncData();
+        }
+    }
 
     document.getElementById('postForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const editKey = document.getElementById('editKey').value;
-        const imgFile = document.getElementById('postImage').files[0];
-        let imgBase64 = editKey ? (announcementsData[editKey].image || "") : "";
-        if(imgFile) imgBase64 = await toBase64(imgFile);
-
         const post = {
             title: document.getElementById('postTitle').value,
             content: document.getElementById('postContent').value,
             manualStatus: document.getElementById('postStatus').value,
-            image: imgBase64,
             postedBy: editKey ? announcementsData[editKey].postedBy : currentAdmin.name,
             datePosted: editKey ? announcementsData[editKey].datePosted : new Date().toLocaleString()
         };
-
-        if(editKey) await fetch(`${BASE_URL}posts/${editKey}.json`, { method: "PATCH", body: JSON.stringify(post) });
-        else await fetch(`${BASE_URL}posts.json`, { method: "POST", body: JSON.stringify(post) });
-
+        const url = editKey ? `${BASE_URL}posts/${editKey}.json` : `${BASE_URL}posts.json`;
+        await fetch(url, { method: editKey ? "PATCH" : "POST", body: JSON.stringify(post) });
         cancelEdit();
         syncData();
     });
@@ -214,7 +224,6 @@
     function logout() { currentAdmin = null; document.getElementById('navBtn').innerText = "LOGIN"; showSection('publicFeed'); }
     function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     function toggleAuth() { if(currentAdmin) logout(); else showSection('loginSection'); }
-    
     syncData();
 </script>
 </body>
