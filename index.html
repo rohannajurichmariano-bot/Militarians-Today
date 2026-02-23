@@ -19,11 +19,13 @@
         .hidden { display: none; }
         .admin-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 30px; }
         .history-table-container { max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
-        .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; }
+        .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; transition: 0.3s; }
         .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
         .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
-        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; }
-        #editPreviewContainer img { border: 2px solid var(--fmnhs-gold); }
+        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 0.9rem; }
+        .reply-bubble { background: #eef3f9; border-left: 4px solid var(--fmnhs-blue); margin-left: 25px; padding: 8px; border-radius: 5px; font-size: 0.85rem; margin-top: 5px; }
+        .admin-badge { background: var(--fmnhs-blue); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .search-container { max-width: 500px; margin: 0 auto 30px auto; }
     </style>
 </head>
 <body>
@@ -43,10 +45,18 @@
 
 <div class="container mb-5">
     <section id="publicFeed">
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h1 class="fw-bold" style="color: var(--fmnhs-blue);">CAMPUS BULLETIN</h1>
             <p class="fw-bold text-secondary">Official School Announcements</p>
         </div>
+
+        <div class="search-container">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Search announcements..." onkeyup="filterPosts()">
+            </div>
+        </div>
+
         <div id="announcementsList" class="row justify-content-center"></div>
     </section>
 
@@ -68,29 +78,22 @@
                 <div class="row g-3">
                     <div class="col-md-9"><label class="fw-bold small mb-1">Title</label><input type="text" id="postTitle" class="form-control" required></div>
                     <div class="col-md-3"><label class="fw-bold small mb-1">Status</label><select id="postStatus" class="form-select"><option value="auto">Automatic</option><option value="NEW">NEW</option><option value="OLD">OLD</option></select></div>
-                    
                     <div class="col-12">
                         <label class="fw-bold small mb-1">Photo Management</label>
                         <div id="editPreviewContainer" class="mb-2 hidden">
-                            <p class="small text-muted mb-1">Current Image:</p>
-                            <img id="editImgPreview" src="" style="height: 100px; width: auto; display: block; margin-bottom: 10px; border-radius: 8px;">
+                            <img id="editImgPreview" src="" style="height: 100px; border-radius: 8px;">
                         </div>
                         <input type="file" id="postImage" class="form-control" accept="image/*">
-                        <button type="button" id="removePhotoBtn" class="btn btn-outline-danger btn-sm mt-2 hidden" onclick="removeExistingPhoto()">
-                            <i class="fas fa-trash-alt"></i> Remove Current Photo
-                        </button>
+                        <button type="button" id="removePhotoBtn" class="btn btn-outline-danger btn-sm mt-2 hidden" onclick="removeExistingPhoto()">Remove Photo</button>
                     </div>
-
                     <div class="col-12"><label class="fw-bold small mb-1">Description</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
                     <div class="col-12"><div class="d-flex gap-2"><button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1 py-2">PUBLISH</button><button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL</button></div></div>
                 </div>
             </form>
         </div>
-
         <div class="admin-section shadow-lg">
-            <h4 class="fw-bold text-danger mb-3"><i class="fas fa-tasks me-2"></i>Manage Existing Posts</h4>
+            <h4 class="fw-bold text-danger mb-3">Manage Existing Posts</h4>
             <div class="history-table-container"><table class="table table-hover align-middle mb-0"><thead class="table-dark"><tr><th>Date</th><th>Headline</th><th class="text-center">Actions</th></tr></thead><tbody id="adminHistoryTable"></tbody></table></div>
-            <div class="text-center mt-4"><button class="btn btn-link text-danger text-decoration-none fw-bold" onclick="logout()">Logout Session</button></div>
         </div>
     </section>
 </div>
@@ -100,11 +103,8 @@
     let announcementsData = {};
     let currentAdmin = null;
 
-    // STABLE SYNC: Only runs if no text input is active
     async function syncData() {
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
-            return; // STOP refresh if user is typing anywhere
-        }
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
             announcementsData = await res.json() || {};
@@ -113,6 +113,22 @@
         } catch (e) { }
     }
     setInterval(syncData, 5000);
+
+    // SEARCH FILTER LOGIC
+    function filterPosts() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.announcement-card-container');
+        
+        cards.forEach(card => {
+            const title = card.getAttribute('data-title').toLowerCase();
+            const content = card.getAttribute('data-content').toLowerCase();
+            if (title.includes(query) || content.includes(query)) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
 
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -132,26 +148,31 @@
             if (p.comments) {
                 Object.keys(p.comments).forEach(cKey => {
                     const c = p.comments[cKey];
-                    commentsHtml += `<div class="comment-bubble d-flex justify-content-between align-items-center">
-                        <span><strong>${c.name}:</strong> ${c.text}</span>
-                        ${currentAdmin ? `<button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}', '${cKey}')"><i class="fas fa-times-circle"></i></button>` : ''}
+                    commentsHtml += `
+                    <div class="comment-bubble mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div><span class="fw-bold text-primary">${c.name}</span><p class="mb-1">${c.text}</p></div>
+                            ${currentAdmin ? `<div>
+                                <button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}', '${c.name}')"><i class="fas fa-reply"></i></button>
+                                <button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}', '${cKey}')"><i class="fas fa-trash"></i></button>
+                            </div>` : ''}
+                        </div>
                     </div>`;
                 });
             }
 
             list.innerHTML += `
-            <div class="col-md-9 col-lg-8">
+            <div class="col-md-9 col-lg-8 announcement-card-container" data-title="${p.title}" data-content="${p.content}">
                 <div class="card announcement-card">
                     ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
                     <div class="card-body p-4">
                         <h3 class="fw-bold text-primary">${badge}${p.title}</h3>
                         <p style="white-space: pre-wrap;">${p.content}</p>
-                        <small class="text-muted">Posted by ${p.postedBy || 'Admin'} on ${p.datePosted}</small>
                     </div>
                     <div class="comment-box">
                         <div id="comment-list-${key}">${commentsHtml || '<p class="text-muted small">No comments yet.</p>'}</div>
                         <div class="input-group mt-3">
-                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" placeholder="Name">
+                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" placeholder="Name" ${currentAdmin ? `value="Admin" readonly` : ''}>
                             <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
                             <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
                         </div>
@@ -159,17 +180,20 @@
                 </div>
             </div>`;
         });
+        filterPosts(); // Keep search active during sync
+    }
+
+    function prepareReply(postKey, studentName) {
+        const textInput = document.getElementById(`text-${postKey}`);
+        textInput.value = `@${studentName} `;
+        textInput.focus();
     }
 
     async function addComment(postKey) {
         const nameVal = document.getElementById(`name-${postKey}`).value.trim() || "Guest";
         const textVal = document.getElementById(`text-${postKey}`).value.trim();
         if (!textVal) return;
-        
-        await fetch(`${BASE_URL}posts/${postKey}/comments.json`, {
-            method: "POST",
-            body: JSON.stringify({ name: nameVal, text: textVal })
-        });
+        await fetch(`${BASE_URL}posts/${postKey}/comments.json`, { method: "POST", body: JSON.stringify({ name: nameVal, text: textVal }) });
         document.getElementById(`text-${postKey}`).value = "";
         syncData();
     }
@@ -181,7 +205,7 @@
         }
     }
 
-    // ADMIN FUNCTIONS
+    // ADMIN DASHBOARD & EDITING (UNTOUCHED LOGIC)
     async function login() {
         const user = document.getElementById('adminUser').value;
         const pass = document.getElementById('adminPass').value;
@@ -211,21 +235,11 @@
         document.getElementById('postContent').value = p.content;
         document.getElementById('postStatus').value = p.manualStatus || "auto";
         document.getElementById('existingImgData').value = p.image || "";
-        
-        // Handling Preview & Remove Button
         const previewCont = document.getElementById('editPreviewContainer');
         const previewImg = document.getElementById('editImgPreview');
         const removeBtn = document.getElementById('removePhotoBtn');
-
-        if(p.image) {
-            previewImg.src = p.image;
-            previewCont.classList.remove('hidden');
-            removeBtn.classList.remove('hidden');
-        } else {
-            previewCont.classList.add('hidden');
-            removeBtn.classList.add('hidden');
-        }
-
+        if(p.image) { previewImg.src = p.image; previewCont.classList.remove('hidden'); removeBtn.classList.remove('hidden'); }
+        else { previewCont.classList.add('hidden'); removeBtn.classList.add('hidden'); }
         document.getElementById('formTitle').innerText = "Editing Post...";
         document.getElementById('submitBtn').innerText = "UPDATE POST";
         document.getElementById('cancelBtn').classList.remove('hidden');
@@ -233,7 +247,7 @@
     }
 
     function removeExistingPhoto() {
-        if(confirm("Permanently remove the photo?")) {
+        if(confirm("Remove this photo?")) {
             document.getElementById('existingImgData').value = "";
             document.getElementById('postImage').value = "";
             document.getElementById('editPreviewContainer').classList.add('hidden');
@@ -263,9 +277,7 @@
         e.preventDefault();
         const editKey = document.getElementById('editKey').value;
         const imgFile = document.getElementById('postImage').files[0];
-        
         let imgBase64 = imgFile ? await toBase64(imgFile) : document.getElementById('existingImgData').value;
-
         const post = {
             title: document.getElementById('postTitle').value,
             content: document.getElementById('postContent').value,
@@ -274,14 +286,12 @@
             postedBy: editKey ? announcementsData[editKey].postedBy : currentAdmin.name,
             datePosted: editKey ? announcementsData[editKey].datePosted : new Date().toLocaleString()
         };
-
-        const url = editKey ? `${BASE_URL}posts/${editKey}.json` : `${BASE_URL}posts.json`;
-        await fetch(url, { method: editKey ? "PATCH" : "POST", body: JSON.stringify(post) });
+        await fetch(editKey ? `${BASE_URL}posts/${editKey}.json` : `${BASE_URL}posts.json`, { method: editKey ? "PATCH" : "POST", body: JSON.stringify(post) });
         cancelEdit();
         syncData();
     });
 
-    function logout() { currentAdmin = null; document.getElementById('navBtn').innerText = "LOGIN"; showSection('publicFeed'); }
+    function logout() { currentAdmin = null; document.getElementById('navBtn').innerText = "LOGIN"; showSection('publicFeed'); syncData(); }
     function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     function toggleAuth() { if(currentAdmin) logout(); else showSection('loginSection'); }
     syncData();
