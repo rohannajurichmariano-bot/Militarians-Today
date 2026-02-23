@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Militarians Today | FMNHS Admin</title>
+    <title>Militarians Today | FMNHS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --fmnhs-blue: #1a4b8c; --fmnhs-gold: #ffcc00; }
-        body { background: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        
+        body { 
+            background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('fmnhs.jpg'); 
+            background-size: cover; background-attachment: fixed; background-position: center;
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+        }
+
         .navbar { background-color: var(--fmnhs-blue) !important; border-bottom: 4px solid var(--fmnhs-gold); }
         .school-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: white; border-radius: 50%; }
+        .status-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; }
         .hidden { display: none; }
         
-        /* Layout Styles */
-        .admin-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .history-table-container { max-height: 450px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
-        .table thead { background: #212529; color: white; position: sticky; top: 0; z-index: 10; }
+        .admin-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .history-table-container { max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
         
-        .announcement-card { border: none; border-left: 5px solid var(--fmnhs-blue); margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background: white; }
+        .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 8px; overflow: hidden; }
+        .post-img-preview { width: 100%; max-height: 400px; object-fit: cover; border-bottom: 1px solid #eee; }
+        
+        .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
+        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <nav class="navbar navbar-dark sticky-top mb-4">
-    <div class="container d-flex justify-content-between">
-        <div class="navbar-brand d-flex align-items-center fw-bold" onclick="location.reload()" style="cursor:pointer">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="navbar-brand d-flex align-items-center fw-bold m-0" onclick="location.reload()" style="cursor:pointer">
             <img src="logofmnhs.jpg" alt="Logo" class="school-logo"> 
             <span>MILITARIANS TODAY</span>
         </div>
-        <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">LOGIN</button>
+        <div class="d-flex align-items-center gap-2">
+            <span id="liveStatus" class="status-badge bg-success text-white">Online</span>
+            <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">LOGIN</button>
+        </div>
     </div>
 </nav>
 
@@ -37,14 +49,14 @@
     
     <section id="publicFeed">
         <div class="text-center mb-4">
-            <h1 class="fw-bold">CAMPUS BULLETIN</h1>
-            <p class="text-secondary">Official School Announcements</p>
+            <h1 class="fw-bold" style="color: var(--fmnhs-blue);">CAMPUS BULLETIN</h1>
+            <p class="fw-bold text-secondary">Official School Announcements & Feedback</p>
         </div>
-        <div id="announcementsList" class="row"></div>
+        <div id="announcementsList" class="row justify-content-center"></div>
     </section>
 
     <section id="loginSection" class="hidden">
-        <div class="card shadow-sm p-4 mx-auto border-0" style="max-width: 350px; margin-top: 50px;">
+        <div class="card shadow-lg p-4 mx-auto border-0" style="max-width: 350px; margin-top: 50px;">
             <h5 class="text-center fw-bold mb-3">ADMIN ACCESS</h5>
             <input type="text" id="adminUser" class="form-control mb-2" placeholder="Username">
             <input type="password" id="adminPass" class="form-control mb-3" placeholder="Password">
@@ -60,25 +72,29 @@
                 <input type="hidden" id="editKey">
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label fw-bold">Title</label>
-                        <input type="text" id="postTitle" class="form-control" placeholder="Enter headline..." required>
+                        <label class="fw-bold small">Announcement Title</label>
+                        <input type="text" id="postTitle" class="form-control" placeholder="Enter title..." required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Status</label>
+                        <label class="fw-bold small">Status Badge</label>
                         <select id="postStatus" class="form-select">
-                            <option value="auto">Automatic (New/Old)</option>
-                            <option value="NEW">Always NEW</option>
-                            <option value="OLD">Always OLD</option>
+                            <option value="auto">Automatic</option>
+                            <option value="NEW">NEW</option>
+                            <option value="OLD">OLD</option>
                         </select>
                     </div>
+                    <div class="col-md-12">
+                        <label class="fw-bold small">Upload Poster/Photo (Optional)</label>
+                        <input type="file" id="postImage" class="form-control" accept="image/*">
+                    </div>
                     <div class="col-12">
-                        <label class="form-label fw-bold">Content Details</label>
-                        <textarea id="postContent" class="form-control" rows="5" placeholder="Type the full announcement here..." required></textarea>
+                        <label class="fw-bold small">Details</label>
+                        <textarea id="postContent" class="form-control" rows="4" placeholder="Announcement details..." required></textarea>
                     </div>
                     <div class="col-12">
                         <div class="d-flex gap-2">
-                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg fw-bold flex-grow-1">PUBLISH TO BULLETIN</button>
-                            <button type="button" id="cancelBtn" class="btn btn-secondary btn-lg hidden" onclick="cancelEdit()">CANCEL EDIT</button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1">PUBLISH POST</button>
+                            <button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL EDIT</button>
                         </div>
                     </div>
                 </div>
@@ -92,18 +108,15 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Date</th>
-                            <th>Announcement Title</th>
+                            <th>Title</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="adminHistoryTable">
-                        </tbody>
+                    <tbody id="adminHistoryTable"></tbody>
                 </table>
             </div>
-            <div class="text-center mt-4 pt-3 border-top">
-                <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout Administrator
-                </button>
+            <div class="text-center mt-4 pt-2 border-top">
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout Administrator</button>
             </div>
         </div>
 
@@ -126,42 +139,87 @@
     }
     setInterval(syncData, 3000);
 
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
     function renderAnnouncements() {
         const list = document.getElementById('announcementsList');
         list.innerHTML = "";
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
+            
+            let statusHtml = "";
+            if(p.manualStatus === "NEW") statusHtml = `<span class="badge bg-success me-2">NEW</span>`;
+            else if(p.manualStatus === "OLD") statusHtml = `<span class="badge bg-secondary me-2">OLD</span>`;
+
+            let commentsHtml = "";
+            if (p.comments) {
+                Object.keys(p.comments).forEach(cKey => {
+                    const c = p.comments[cKey];
+                    commentsHtml += `
+                        <div class="comment-bubble d-flex justify-content-between align-items-center">
+                            <span><strong>${c.name}:</strong> ${c.text}</span>
+                            ${currentAdmin ? `<button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}', '${cKey}')"><i class="fas fa-times"></i></button>` : ''}
+                        </div>`;
+                });
+            }
+
             list.innerHTML += `
-            <div class="col-12"><div class="card announcement-card p-3">
-                <h5 class="fw-bold m-0 text-primary">${p.title}</h5>
-                <small class="text-muted">${p.datePosted}</small>
-                <p class="mt-2" style="white-space: pre-wrap;">${p.content}</p>
-            </div></div>`;
+            <div class="col-md-8">
+                <div class="card announcement-card">
+                    ${p.image ? `<img src="${p.image}" class="post-img-preview">` : ''}
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold text-primary">${statusHtml}${p.title}</h4>
+                        <p style="white-space: pre-wrap;">${p.content}</p>
+                        <small class="text-muted"><i class="fas fa-clock"></i> ${p.datePosted} | By: ${p.postedBy || 'Admin'}</small>
+                    </div>
+                    <div class="comment-box">
+                        <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet.</small>'}</div>
+                        <div class="input-group input-group-sm mt-3">
+                            <input type="text" id="name-${key}" class="form-control" style="max-width: 110px;" placeholder="Name">
+                            <input type="text" id="text-${key}" class="form-control" placeholder="Add a comment...">
+                            <button class="btn btn-primary fw-bold" onclick="addComment('${key}')">POST</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
         });
     }
 
     function renderAdminHistory() {
         const tbody = document.getElementById('adminHistoryTable');
         tbody.innerHTML = "";
-        const keys = Object.keys(announcementsData).reverse();
-        
-        if(keys.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='3' class='text-center text-muted py-3'>No posts found.</td></tr>";
-            return;
-        }
-
-        keys.forEach(key => {
+        Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
             tbody.innerHTML += `
             <tr>
                 <td><small>${p.datePosted.split(',')[0]}</small></td>
-                <td class="fw-bold">${p.title}</td>
-                <td class="text-center" style="width: 180px;">
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="startEdit('${key}')"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deletePost('${key}')"><i class="fas fa-trash"></i></button>
+                <td class="fw-bold text-truncate" style="max-width: 250px;">${p.title}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-primary me-1" onclick="startEdit('${key}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">Del</button>
                 </td>
             </tr>`;
         });
+    }
+
+    async function addComment(postKey) {
+        const name = document.getElementById(`name-${postKey}`).value.trim() || "Militarian";
+        const text = document.getElementById(`text-${postKey}`).value.trim();
+        if (!text) return;
+        await fetch(`${BASE_URL}posts/${postKey}/comments.json`, { method: "POST", body: JSON.stringify({ name, text }) });
+        syncData();
+    }
+
+    async function deleteComment(postKey, commentKey) {
+        if(confirm("Delete comment?")) {
+            await fetch(`${BASE_URL}posts/${postKey}/comments/${commentKey}.json`, { method: "DELETE" });
+            syncData();
+        }
     }
 
     async function login() {
@@ -182,24 +240,23 @@
         document.getElementById('editKey').value = key;
         document.getElementById('postTitle').value = p.title;
         document.getElementById('postContent').value = p.content;
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit text-warning"></i> Editing Post...';
+        document.getElementById('postStatus').value = p.manualStatus || "auto";
+        document.getElementById('formTitle').innerText = "Edit Post";
         document.getElementById('submitBtn').innerText = "UPDATE POST";
-        document.getElementById('submitBtn').className = "btn btn-warning btn-lg fw-bold flex-grow-1";
         document.getElementById('cancelBtn').classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function cancelEdit() {
         document.getElementById('postForm').reset();
         document.getElementById('editKey').value = "";
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Create New Announcement';
-        document.getElementById('submitBtn').innerText = "PUBLISH TO BULLETIN";
-        document.getElementById('submitBtn').className = "btn btn-primary btn-lg fw-bold flex-grow-1";
+        document.getElementById('formTitle').innerText = "Create New Announcement";
+        document.getElementById('submitBtn').innerText = "PUBLISH POST";
         document.getElementById('cancelBtn').classList.add('hidden');
     }
 
     async function deletePost(key) {
-        if(confirm("Burahin ang announcement na ito?")) {
+        if(confirm("Delete this post?")) {
             await fetch(`${BASE_URL}posts/${key}.json`, { method: "DELETE" });
             syncData();
         }
@@ -208,13 +265,19 @@
     document.getElementById('postForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const editKey = document.getElementById('editKey').value;
+        const imgFile = document.getElementById('postImage').files[0];
+        let imgBase64 = editKey ? (announcementsData[editKey].image || "") : "";
+        if(imgFile) imgBase64 = await toBase64(imgFile);
+
         const post = {
             title: document.getElementById('postTitle').value,
             content: document.getElementById('postContent').value,
             manualStatus: document.getElementById('postStatus').value,
+            image: imgBase64,
             postedBy: editKey ? announcementsData[editKey].postedBy : currentAdmin.name,
             datePosted: editKey ? announcementsData[editKey].datePosted : new Date().toLocaleString()
         };
+
         const url = editKey ? `${BASE_URL}posts/${editKey}.json` : `${BASE_URL}posts.json`;
         await fetch(url, { method: editKey ? "PATCH" : "POST", body: JSON.stringify(post) });
         cancelEdit();
