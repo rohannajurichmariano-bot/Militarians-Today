@@ -22,7 +22,8 @@
         .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; }
         .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
         .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
-        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; position: relative; }
+        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; }
+        #removePhotoBtn { font-size: 0.8rem; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -63,10 +64,17 @@
             <h4 id="formTitle" class="fw-bold text-primary mb-4"><i class="fas fa-plus-circle me-2"></i>Create New Announcement</h4>
             <form id="postForm">
                 <input type="hidden" id="editKey">
+                <input type="hidden" id="existingImgData">
                 <div class="row g-3">
                     <div class="col-md-9"><label class="fw-bold small mb-1">Title</label><input type="text" id="postTitle" class="form-control" required></div>
                     <div class="col-md-3"><label class="fw-bold small mb-1">Status</label><select id="postStatus" class="form-select"><option value="auto">Automatic</option><option value="NEW">NEW</option><option value="OLD">OLD</option></select></div>
-                    <div class="col-12"><label class="fw-bold small mb-1">Upload Photo</label><input type="file" id="postImage" class="form-control" accept="image/*"></div>
+                    <div class="col-12">
+                        <label class="fw-bold small mb-1">Photo (Upload new to change)</label>
+                        <input type="file" id="postImage" class="form-control" accept="image/*">
+                        <button type="button" id="removePhotoBtn" class="btn btn-outline-danger btn-sm hidden" onclick="removeExistingPhoto()">
+                            <i class="fas fa-trash"></i> Remove Current Photo
+                        </button>
+                    </div>
                     <div class="col-12"><label class="fw-bold small mb-1">Description</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
                     <div class="col-12"><div class="d-flex gap-2"><button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1 py-2">PUBLISH</button><button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL</button></div></div>
                 </div>
@@ -84,16 +92,18 @@
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
     let announcementsData = {};
     let currentAdmin = null;
+    let isTyping = false;
 
     async function syncData() {
+        if (isTyping) return;
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
             announcementsData = await res.json() || {};
             renderAnnouncements();
             if(currentAdmin) renderAdminHistory();
-        } catch (e) { console.error("Sync Error:", e); }
+        } catch (e) { }
     }
-    setInterval(syncData, 5000); // Increased sync time to prevent typing lag
+    setInterval(syncData, 4000);
 
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -104,7 +114,6 @@
 
     function renderAnnouncements() {
         const list = document.getElementById('announcementsList');
-        const scrollPos = window.scrollY; // Store scroll to prevent jump
         list.innerHTML = "";
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
@@ -133,8 +142,8 @@
                     <div class="comment-box">
                         <div id="comment-list-${key}">${commentsHtml || '<p class="text-muted small">No comments yet.</p>'}</div>
                         <div class="input-group mt-3">
-                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" placeholder="Name">
-                            <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
+                            <input type="text" onfocus="isTyping=true" onblur="isTyping=false" id="name-${key}" class="form-control form-control-sm" style="max-width: 100px;" placeholder="Name">
+                            <input type="text" onfocus="isTyping=true" onblur="isTyping=false" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
                             <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
                         </div>
                     </div>
@@ -144,26 +153,16 @@
     }
 
     async function addComment(postKey) {
-        const nameInput = document.getElementById(`name-${postKey}`);
-        const textInput = document.getElementById(`text-${postKey}`);
-        const name = nameInput.value.trim() || "Guest";
-        const text = textInput.value.trim();
-
-        if (!text) return;
-
-        try {
-            const response = await fetch(`${BASE_URL}posts/${postKey}/comments.json`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, text })
-            });
-            if (response.ok) {
-                textInput.value = ""; // Clear input on success
-                syncData(); // Refresh UI
-            }
-        } catch (error) {
-            alert("Error posting comment. Check connection.");
-        }
+        const nameVal = document.getElementById(`name-${postKey}`).value.trim() || "Guest";
+        const textVal = document.getElementById(`text-${postKey}`).value.trim();
+        if (!textVal) return;
+        isTyping = false;
+        await fetch(`${BASE_URL}posts/${postKey}/comments.json`, {
+            method: "POST",
+            body: JSON.stringify({ name: nameVal, text: textVal })
+        });
+        document.getElementById(`text-${postKey}`).value = "";
+        syncData();
     }
 
     async function deleteComment(postKey, commentKey) {
@@ -173,7 +172,6 @@
         }
     }
 
-    // --- Admin Logic ---
     async function login() {
         const user = document.getElementById('adminUser').value;
         const pass = document.getElementById('adminPass').value;
@@ -202,15 +200,31 @@
         document.getElementById('postTitle').value = p.title;
         document.getElementById('postContent').value = p.content;
         document.getElementById('postStatus').value = p.manualStatus || "auto";
+        document.getElementById('existingImgData').value = p.image || "";
+        
+        // Show/Hide remove photo button
+        if(p.image) document.getElementById('removePhotoBtn').classList.remove('hidden');
+        else document.getElementById('removePhotoBtn').classList.add('hidden');
+
         document.getElementById('formTitle').innerText = "Editing Post...";
         document.getElementById('submitBtn').innerText = "UPDATE POST";
         document.getElementById('cancelBtn').classList.remove('hidden');
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
+    function removeExistingPhoto() {
+        if(confirm("Are you sure you want to remove this photo?")) {
+            document.getElementById('existingImgData').value = "";
+            document.getElementById('postImage').value = "";
+            document.getElementById('removePhotoBtn').classList.add('hidden');
+        }
+    }
+
     function cancelEdit() {
         document.getElementById('postForm').reset();
         document.getElementById('editKey').value = "";
+        document.getElementById('existingImgData').value = "";
+        document.getElementById('removePhotoBtn').classList.add('hidden');
         document.getElementById('formTitle').innerText = "Create New Announcement";
         document.getElementById('submitBtn').innerText = "PUBLISH";
         document.getElementById('cancelBtn').classList.add('hidden');
@@ -227,8 +241,14 @@
         e.preventDefault();
         const editKey = document.getElementById('editKey').value;
         const imgFile = document.getElementById('postImage').files[0];
-        let imgBase64 = editKey ? (announcementsData[editKey].image || "") : "";
-        if(imgFile) imgBase64 = await toBase64(imgFile);
+        
+        let imgBase64 = "";
+        if (imgFile) {
+            imgBase64 = await toBase64(imgFile);
+        } else {
+            // Keep existing (which might be empty if "Remove Photo" was clicked)
+            imgBase64 = document.getElementById('existingImgData').value;
+        }
 
         const post = {
             title: document.getElementById('postTitle').value,
