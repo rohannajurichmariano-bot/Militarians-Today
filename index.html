@@ -22,8 +22,8 @@
         .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; }
         .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
         .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
-        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; }
-        .admin-comment-row { background: #fff9e6; font-size: 0.85rem; border-bottom: 1px dashed #ccc; }
+        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; position: relative; }
+        .admin-row { background: #fff9e6 !important; }
     </style>
 </head>
 <body>
@@ -35,7 +35,7 @@
             <span>MILITARIANS TODAY</span>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <span id="liveStatus" class="status-badge bg-success text-white"><i class="fas fa-circle small"></i> Online</span>
+            <span id="liveStatus" class="status-badge bg-success text-white">Checking...</span>
             <button class="btn btn-warning btn-sm fw-bold shadow-sm" id="navBtn" onclick="toggleAuth()">LOGIN</button>
         </div>
     </div>
@@ -48,7 +48,7 @@
             <p class="fw-bold text-secondary">Official School Announcements</p>
         </div>
         <div class="mx-auto mb-4" style="max-width:600px;">
-            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 Search headline or content..." onkeyup="filterPosts()">
+            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 Search post or comments..." onkeyup="filterPosts()">
         </div>
         <div id="announcementsList" class="row justify-content-center"></div>
     </section>
@@ -64,40 +64,34 @@
 
     <section id="adminDashboard" class="hidden">
         <div class="admin-section" style="border-top: 6px solid var(--fmnhs-blue);">
-            <h4 id="formTitle" class="fw-bold text-primary mb-4"><i class="fas fa-plus-circle me-2"></i>Create New Announcement</h4>
+            <h4 id="formTitle" class="fw-bold text-primary mb-4">Create Announcement</h4>
             <form id="postForm">
                 <input type="hidden" id="editKey">
                 <input type="hidden" id="existingImgData">
                 <div class="row g-3">
-                    <div class="col-md-7"><label class="fw-bold small">Title</label><input type="text" id="postTitle" class="form-control" required></div>
-                    <div class="col-md-2"><label class="fw-bold small">Status</label>
+                    <div class="col-md-7"><label class="small fw-bold">Title</label><input type="text" id="postTitle" class="form-control" required></div>
+                    <div class="col-md-2"><label class="small fw-bold">Status</label>
                         <select id="postStatus" class="form-select" onchange="toggleScheduleDate()">
                             <option value="auto">Auto</option><option value="NEW">NEW</option><option value="OLD">OLD</option><option value="SCHEDULED">SCHEDULED</option>
                         </select>
                     </div>
-                    <div class="col-md-3"><label class="fw-bold small">Schedule Date</label><input type="datetime-local" id="scheduleDate" class="form-control hidden"></div>
-                    <div class="col-12">
-                        <label class="fw-bold small">Photo</label>
-                        <div id="editPreviewContainer" class="mb-2 hidden"><img id="editImgPreview" src="" style="height: 50px;"><button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeExistingPhoto()">X</button></div>
-                        <input type="file" id="postImage" class="form-control" accept="image/*">
-                    </div>
-                    <div class="col-12"><label class="fw-bold small">Description</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
-                    <div class="col-12"><div class="d-flex gap-2"><button type="submit" id="submitBtn" class="btn btn-primary fw-bold flex-grow-1">PUBLISH</button><button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">CANCEL</button></div></div>
+                    <div class="col-md-3"><label class="small fw-bold">Release Date</label><input type="datetime-local" id="scheduleDate" class="form-control hidden"></div>
+                    <div class="col-12"><label class="small fw-bold">Image</label><input type="file" id="postImage" class="form-control" accept="image/*"></div>
+                    <div class="col-12"><label class="small fw-bold">Content</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
+                    <div class="col-12"><button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold">PUBLISH</button></div>
                 </div>
             </form>
         </div>
 
         <div class="admin-section shadow-lg">
-            <h4 class="fw-bold text-danger mb-3"><i class="fas fa-tasks me-2"></i>Admin Management (Posts & Comments)</h4>
+            <h4 class="fw-bold text-danger mb-3">Manage Posts & Comments</h4>
             <div class="history-table-container">
-                <table class="table align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr><th>Announcement Details</th><th class="text-center" style="width:200px;">Control Panel</th></tr>
-                    </thead>
+                <table class="table table-bordered align-middle">
+                    <thead class="table-dark"><tr><th>Announcements / Comments</th><th class="text-center">Action</th></tr></thead>
                     <tbody id="adminHistoryTable"></tbody>
                 </table>
             </div>
-            <div class="text-center mt-4"><button class="btn btn-link text-danger fw-bold" onclick="logout()">Logout Session</button></div>
+            <button class="btn btn-link text-danger mt-3" onclick="logout()">Logout Session</button>
         </div>
     </section>
 </div>
@@ -105,132 +99,156 @@
 <script>
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
     let announcementsData = {};
-    let currentAdmin = JSON.parse(localStorage.getItem('adminSession'));
+    // Critical: Ensure Admin state is captured immediately
+    let currentAdmin = JSON.parse(localStorage.getItem('adminSession')) || null;
 
+    // --- 1. CONNECTION & SYNC ---
     function updateOnlineStatus() {
         const b = document.getElementById('liveStatus');
-        b.innerHTML = navigator.onLine ? '<i class="fas fa-circle small"></i> Online' : '<i class="fas fa-circle-notch fa-spin small"></i> Offline';
-        b.className = navigator.onLine ? 'status-badge bg-success text-white' : 'status-badge bg-danger text-white';
+        const isOnline = navigator.onLine;
+        b.innerHTML = isOnline ? '<i class="fas fa-circle small"></i> Online' : '<i class="fas fa-circle-notch fa-spin small"></i> Offline';
+        b.className = `status-badge ${isOnline ? 'bg-success' : 'bg-danger'} text-white`;
     }
-    window.addEventListener('online', updateOnlineStatus); window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
 
     async function syncData() {
         if (!navigator.onLine) return;
+        // Protection: Don't refresh if admin is typing or editing
         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
             announcementsData = await res.json() || {};
-            renderAnnouncements();
-            if(currentAdmin) renderAdminHistory();
-        } catch (e) {}
+            renderUI();
+        } catch (e) { console.error("Sync Error"); }
     }
-    setInterval(syncData, 4000);
+    setInterval(syncData, 5000);
 
-    function renderAnnouncements() {
-        const list = document.getElementById('announcementsList'); list.innerHTML = "";
+    // --- 2. RENDER LOGIC (THE HEART OF THE FIX) ---
+    function renderUI() {
+        renderPublicFeed();
+        if (currentAdmin) renderAdminTable();
+    }
+
+    function renderPublicFeed() {
+        const list = document.getElementById('announcementsList');
+        list.innerHTML = "";
         const now = new Date();
+
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !currentAdmin && now < new Date(p.scheduledTime)) return;
+            
+            // Scheduling logic
+            if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !currentAdmin) {
+                if (now < new Date(p.scheduledTime)) return;
+            }
 
             let commentsHtml = "";
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
                     const c = p.comments[ck];
-                    commentsHtml += `<div class="comment-bubble d-flex justify-content-between align-items-start">
-                        <span style="word-break:break-all;"><strong>${c.name}:</strong> ${c.text}</span>
-                        ${currentAdmin ? `<div class="ms-2 d-flex"><button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}','${c.name}')"><i class="fas fa-reply"></i></button><button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash"></i></button></div>` : ''}
+                    // Force buttons to render if admin is true
+                    let adminActions = currentAdmin ? `
+                        <div class="ms-2">
+                            <button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}','${c.name}')"><i class="fas fa-reply"></i></button>
+                            <button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash"></i></button>
+                        </div>` : '';
+
+                    commentsHtml += `<div class="comment-bubble d-flex justify-content-between align-items-center">
+                        <span><strong>${c.name}:</strong> ${c.text}</span>${adminActions}
                     </div>`;
                 });
             }
 
-            list.innerHTML += `<div class="col-md-9 col-lg-8 post-wrapper"><div class="card announcement-card">
-                ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
-                <div class="card-body p-4"><h3>${p.title}</h3><p style="white-space:pre-wrap;">${p.content}</p></div>
-                <div class="comment-box"><div id="comments-${key}">${commentsHtml || 'No comments yet.'}</div>
-                <div class="input-group mt-2">
-                    <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width:100px" placeholder="Name" ${currentAdmin?'value="Admin" readonly':''}>
-                    <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
-                    <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
-                </div></div></div></div>`;
+            list.innerHTML += `
+            <div class="col-md-9 col-lg-8 post-wrapper">
+                <div class="card announcement-card">
+                    ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
+                    <div class="card-body p-4">
+                        <h3 class="text-primary fw-bold">${p.title}</h3>
+                        <p style="white-space:pre-wrap;">${p.content}</p>
+                    </div>
+                    <div class="comment-box">
+                        <div id="comments-${key}">${commentsHtml || 'No comments.'}</div>
+                        <div class="input-group mt-2">
+                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width:100px" placeholder="Name" ${currentAdmin?'value="Admin" readonly':''}>
+                            <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
+                            <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
         });
+        filterPosts();
     }
 
-    function renderAdminHistory() {
-        const tbody = document.getElementById('adminHistoryTable'); tbody.innerHTML = "";
+    function renderAdminTable() {
+        const tbody = document.getElementById('adminHistoryTable');
+        tbody.innerHTML = "";
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            tbody.innerHTML += `<tr class="table-primary">
-                <td><strong>${p.title}</strong><br><small class="text-muted">${p.datePosted}</small></td>
+            // Post Row
+            tbody.innerHTML += `<tr class="table-secondary">
+                <td><strong>${p.title}</strong><br><small>${p.datePosted}</small></td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-dark me-1" onclick="startEdit('${key}')">EDIT</button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">DELETE POST</button>
+                    <button class="btn btn-sm btn-primary" onclick="startEdit('${key}')">EDIT</button>
+                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">DELETE</button>
                 </td>
             </tr>`;
+            // Individual Comment Rows (Admin management)
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
-                    tbody.innerHTML += `<tr class="admin-comment-row">
-                        <td class="ps-4"><em>Comment from ${p.comments[ck].name}:</em> ${p.comments[ck].text}</td>
-                        <td class="text-center"><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteComment('${key}','${ck}')">Remove Comment</button></td>
+                    tbody.innerHTML += `<tr class="admin-row">
+                        <td class="ps-4 small">💬 ${p.comments[ck].name}: ${p.comments[ck].text}</td>
+                        <td class="text-center"><button class="btn btn-xs btn-outline-danger" style="font-size:10px" onclick="deleteComment('${key}','${ck}')">REMOVE COMMENT</button></td>
                     </tr>`;
                 });
             }
         });
     }
 
+    // --- 3. ACTIONS ---
     async function addComment(pk) {
-        const n = document.getElementById(`name-${pk}`).value.trim() || "Guest";
-        const t = document.getElementById(`text-${pk}`).value.trim();
+        const n = document.getElementById(`name-${pk}`).value || "Guest";
+        const t = document.getElementById(`text-${pk}`).value;
         if(!t) return;
         await fetch(`${BASE_URL}posts/${pk}/comments.json`, {method:"POST", body:JSON.stringify({name:n, text:t})});
         document.getElementById(`text-${pk}`).value = ""; syncData();
     }
 
-    async function deleteComment(pk, ck) { if(confirm("Confirm: Delete this comment?")) { await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); syncData(); } }
-    async function deletePost(key) { if(confirm("Confirm: Delete entire post and all its comments?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); syncData(); } }
+    async function deleteComment(pk, ck) { if(confirm("Delete comment?")) { await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); syncData(); } }
+    async function deletePost(key) { if(confirm("Delete entire post?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); syncData(); } }
     function prepareReply(pk, name) { const i = document.getElementById(`text-${pk}`); i.value = `@${name} `; i.focus(); }
 
     async function login() {
-        const u = document.getElementById('adminUser').value; const p = document.getElementById('adminPass').value;
-        const res = await fetch(`${BASE_URL}admins/${u}.json`); const d = await res.json();
-        if(d && d.password === p) { 
-            currentAdmin = {name:d.name}; 
-            localStorage.setItem('adminSession', JSON.stringify(currentAdmin)); 
-            location.reload(); 
-        } else alert("Invalid Admin Login");
+        const u = document.getElementById('adminUser').value;
+        const p = document.getElementById('adminPass').value;
+        const res = await fetch(`${BASE_URL}admins/${u}.json`);
+        const d = await res.json();
+        if(d && d.password === p) {
+            currentAdmin = {name: d.name};
+            localStorage.setItem('adminSession', JSON.stringify(currentAdmin));
+            location.reload(); // Refresh to lock in admin state
+        } else alert("Invalid Login");
     }
 
-    function startEdit(key) {
-        const p = announcementsData[key];
-        document.getElementById('editKey').value = key;
-        document.getElementById('postTitle').value = p.title;
-        document.getElementById('postContent').value = p.content;
-        document.getElementById('existingImgData').value = p.image || "";
-        if(p.image) { document.getElementById('editImgPreview').src = p.image; document.getElementById('editPreviewContainer').classList.remove('hidden'); }
-        document.getElementById('formTitle').innerText = "Update Announcement";
-        document.getElementById('submitBtn').innerText = "SAVE CHANGES";
-        document.getElementById('cancelBtn').classList.remove('hidden');
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function cancelEdit() { 
-        document.getElementById('postForm').reset(); 
-        document.getElementById('editKey').value=""; 
-        document.getElementById('editPreviewContainer').classList.add('hidden'); 
-        document.getElementById('cancelBtn').classList.add('hidden'); 
-        document.getElementById('formTitle').innerText="Create New Announcement"; 
-        document.getElementById('submitBtn').innerText="PUBLISH"; 
-    }
-
-    function removeExistingPhoto() { document.getElementById('existingImgData').value = ""; document.getElementById('editPreviewContainer').classList.add('hidden'); }
-    function toggleScheduleDate() { document.getElementById('scheduleDate').classList.toggle('hidden', document.getElementById('postStatus').value !== 'SCHEDULED'); }
     function logout() { localStorage.removeItem('adminSession'); location.reload(); }
     function toggleAuth() { if(currentAdmin) logout(); else showSection('loginSection'); }
     function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     function filterPosts() { const q = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('.post-wrapper').forEach(p => p.classList.toggle('hidden', !p.innerText.toLowerCase().includes(q))); }
+    function toggleScheduleDate() { document.getElementById('scheduleDate').classList.toggle('hidden', document.getElementById('postStatus').value !== 'SCHEDULED'); }
 
+    // --- 4. STARTUP ---
+    updateOnlineStatus();
+    if(currentAdmin) {
+        showSection('adminDashboard');
+        document.getElementById('navBtn').innerText = "LOGOUT";
+    }
+    syncData();
+
+    // Image & Submit Logic
     const toBase64 = f => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result); r.onerror = e => rej(e); });
-
     document.getElementById('postForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const ek = document.getElementById('editKey').value;
@@ -239,26 +257,21 @@
         const post = {
             title: document.getElementById('postTitle').value, content: document.getElementById('postContent').value,
             manualStatus: document.getElementById('postStatus').value, scheduledTime: document.getElementById('scheduleDate').value,
-            image: img, postedBy: ek ? announcementsData[ek].postedBy : currentAdmin.name,
-            datePosted: ek ? announcementsData[ek].datePosted : new Date().toLocaleString()
+            image: img, postedBy: currentAdmin.name, datePosted: new Date().toLocaleString()
         };
         await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { method: ek ? "PATCH" : "POST", body: JSON.stringify(post) });
-        cancelEdit(); syncData();
+        location.reload();
     });
 
-    // AUTO-LOAD DRAFT (Title & Content only)
-    document.getElementById('postTitle').addEventListener('input', () => { if(!document.getElementById('editKey').value) localStorage.setItem('postTitleDraft', document.getElementById('postTitle').value); });
-    document.getElementById('postContent').addEventListener('input', () => { if(!document.getElementById('editKey').value) localStorage.setItem('postContentDraft', document.getElementById('postContent').value); });
-    
-    if(currentAdmin) { 
-        showSection('adminDashboard'); 
-        document.getElementById('navBtn').innerText = "LOGOUT"; 
-        if(!document.getElementById('editKey').value) {
-            document.getElementById('postTitle').value = localStorage.getItem('postTitleDraft') || "";
-            document.getElementById('postContent').value = localStorage.getItem('postContentDraft') || "";
-        }
+    function startEdit(key) {
+        const p = announcementsData[key];
+        document.getElementById('editKey').value = key;
+        document.getElementById('postTitle').value = p.title;
+        document.getElementById('postContent').value = p.content;
+        document.getElementById('existingImgData').value = p.image || "";
+        document.getElementById('formTitle').innerText = "Editing: " + p.title;
+        window.scrollTo(0,0);
     }
-    updateOnlineStatus(); syncData();
 </script>
 </body>
 </html>
