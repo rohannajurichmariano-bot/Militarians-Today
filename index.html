@@ -23,7 +23,7 @@
         .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
         .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
         .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; }
-        .admin-comment-row { background: #fff9e6; font-size: 0.85rem; border-bottom: 1px dashed #ddd; }
+        .admin-comment-row { background: #fff9e6; font-size: 0.85rem; border-bottom: 1px dashed #ccc; }
     </style>
 </head>
 <body>
@@ -47,8 +47,8 @@
             <h1 class="fw-bold" style="color: var(--fmnhs-blue);">CAMPUS BULLETIN</h1>
             <p class="fw-bold text-secondary">Official School Announcements</p>
         </div>
-        <div class="max-width-600 mx-auto mb-4" style="max-width:600px; margin: 0 auto;">
-            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 Search announcements..." onkeyup="filterPosts()">
+        <div class="mx-auto mb-4" style="max-width:600px;">
+            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 Search headline or content..." onkeyup="filterPosts()">
         </div>
         <div id="announcementsList" class="row justify-content-center"></div>
     </section>
@@ -88,19 +88,16 @@
         </div>
 
         <div class="admin-section shadow-lg">
-            <h4 class="fw-bold text-danger mb-3"><i class="fas fa-tasks me-2"></i>Manage Posts & Comments</h4>
+            <h4 class="fw-bold text-danger mb-3"><i class="fas fa-tasks me-2"></i>Admin Management (Posts & Comments)</h4>
             <div class="history-table-container">
                 <table class="table align-middle mb-0">
                     <thead class="table-dark">
-                        <tr>
-                            <th>Post Info</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
+                        <tr><th>Announcement Details</th><th class="text-center" style="width:200px;">Control Panel</th></tr>
                     </thead>
                     <tbody id="adminHistoryTable"></tbody>
                 </table>
             </div>
-            <div class="text-center mt-4"><button class="btn btn-link text-danger fw-bold" onclick="logout()">Logout</button></div>
+            <div class="text-center mt-4"><button class="btn btn-link text-danger fw-bold" onclick="logout()">Logout Session</button></div>
         </div>
     </section>
 </div>
@@ -112,13 +109,14 @@
 
     function updateOnlineStatus() {
         const b = document.getElementById('liveStatus');
-        b.innerHTML = navigator.onLine ? '<i class="fas fa-circle"></i> Online' : '<i class="fas fa-circle-notch fa-spin"></i> Offline';
+        b.innerHTML = navigator.onLine ? '<i class="fas fa-circle small"></i> Online' : '<i class="fas fa-circle-notch fa-spin small"></i> Offline';
         b.className = navigator.onLine ? 'status-badge bg-success text-white' : 'status-badge bg-danger text-white';
     }
     window.addEventListener('online', updateOnlineStatus); window.addEventListener('offline', updateOnlineStatus);
 
     async function syncData() {
-        if (!navigator.onLine || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+        if (!navigator.onLine) return;
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
             announcementsData = await res.json() || {};
@@ -126,7 +124,7 @@
             if(currentAdmin) renderAdminHistory();
         } catch (e) {}
     }
-    setInterval(syncData, 5000);
+    setInterval(syncData, 4000);
 
     function renderAnnouncements() {
         const list = document.getElementById('announcementsList'); list.innerHTML = "";
@@ -139,9 +137,9 @@
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
                     const c = p.comments[ck];
-                    commentsHtml += `<div class="comment-bubble d-flex justify-content-between">
-                        <span><strong>${c.name}:</strong> ${c.text}</span>
-                        ${currentAdmin ? `<div><button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}','${c.name}')"><i class="fas fa-reply"></i></button><button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash"></i></button></div>` : ''}
+                    commentsHtml += `<div class="comment-bubble d-flex justify-content-between align-items-start">
+                        <span style="word-break:break-all;"><strong>${c.name}:</strong> ${c.text}</span>
+                        ${currentAdmin ? `<div class="ms-2 d-flex"><button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}','${c.name}')"><i class="fas fa-reply"></i></button><button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash"></i></button></div>` : ''}
                     </div>`;
                 });
             }
@@ -149,7 +147,7 @@
             list.innerHTML += `<div class="col-md-9 col-lg-8 post-wrapper"><div class="card announcement-card">
                 ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
                 <div class="card-body p-4"><h3>${p.title}</h3><p style="white-space:pre-wrap;">${p.content}</p></div>
-                <div class="comment-box"><div id="comments-${key}">${commentsHtml || 'No comments.'}</div>
+                <div class="comment-box"><div id="comments-${key}">${commentsHtml || 'No comments yet.'}</div>
                 <div class="input-group mt-2">
                     <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width:100px" placeholder="Name" ${currentAdmin?'value="Admin" readonly':''}>
                     <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
@@ -162,20 +160,18 @@
         const tbody = document.getElementById('adminHistoryTable'); tbody.innerHTML = "";
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            // Main Post Row
-            tbody.innerHTML += `<tr class="table-light">
-                <td><strong>${p.title}</strong><br><small>${p.datePosted}</small></td>
+            tbody.innerHTML += `<tr class="table-primary">
+                <td><strong>${p.title}</strong><br><small class="text-muted">${p.datePosted}</small></td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-primary" onclick="startEdit('${key}')">Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">Delete Post</button>
+                    <button class="btn btn-sm btn-dark me-1" onclick="startEdit('${key}')">EDIT</button>
+                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">DELETE POST</button>
                 </td>
             </tr>`;
-            // Comments Management Rows
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
                     tbody.innerHTML += `<tr class="admin-comment-row">
-                        <td class="ps-4 italic">💬 ${p.comments[ck].name}: ${p.comments[ck].text}</td>
-                        <td class="text-center"><button class="btn btn-sm text-danger" onclick="deleteComment('${key}','${ck}')">Remove Comment</button></td>
+                        <td class="ps-4"><em>Comment from ${p.comments[ck].name}:</em> ${p.comments[ck].text}</td>
+                        <td class="text-center"><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteComment('${key}','${ck}')">Remove Comment</button></td>
                     </tr>`;
                 });
             }
@@ -190,15 +186,18 @@
         document.getElementById(`text-${pk}`).value = ""; syncData();
     }
 
-    async function deleteComment(pk, ck) { if(confirm("Delete this comment?")) { await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); syncData(); } }
-    async function deletePost(key) { if(confirm("Delete entire post?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); syncData(); } }
+    async function deleteComment(pk, ck) { if(confirm("Confirm: Delete this comment?")) { await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); syncData(); } }
+    async function deletePost(key) { if(confirm("Confirm: Delete entire post and all its comments?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); syncData(); } }
     function prepareReply(pk, name) { const i = document.getElementById(`text-${pk}`); i.value = `@${name} `; i.focus(); }
 
     async function login() {
         const u = document.getElementById('adminUser').value; const p = document.getElementById('adminPass').value;
         const res = await fetch(`${BASE_URL}admins/${u}.json`); const d = await res.json();
-        if(d && d.password === p) { currentAdmin = {name:d.name}; localStorage.setItem('adminSession', JSON.stringify(currentAdmin)); location.reload(); }
-        else alert("Wrong credentials");
+        if(d && d.password === p) { 
+            currentAdmin = {name:d.name}; 
+            localStorage.setItem('adminSession', JSON.stringify(currentAdmin)); 
+            location.reload(); 
+        } else alert("Invalid Admin Login");
     }
 
     function startEdit(key) {
@@ -208,13 +207,21 @@
         document.getElementById('postContent').value = p.content;
         document.getElementById('existingImgData').value = p.image || "";
         if(p.image) { document.getElementById('editImgPreview').src = p.image; document.getElementById('editPreviewContainer').classList.remove('hidden'); }
-        document.getElementById('formTitle').innerText = "Editing Post...";
-        document.getElementById('submitBtn').innerText = "UPDATE";
+        document.getElementById('formTitle').innerText = "Update Announcement";
+        document.getElementById('submitBtn').innerText = "SAVE CHANGES";
         document.getElementById('cancelBtn').classList.remove('hidden');
-        window.scrollTo(0,0);
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    function cancelEdit() { document.getElementById('postForm').reset(); document.getElementById('editKey').value=""; document.getElementById('editPreviewContainer').classList.add('hidden'); document.getElementById('cancelBtn').classList.add('hidden'); document.getElementById('formTitle').innerText="Create New Announcement"; document.getElementById('submitBtn').innerText="PUBLISH"; }
+    function cancelEdit() { 
+        document.getElementById('postForm').reset(); 
+        document.getElementById('editKey').value=""; 
+        document.getElementById('editPreviewContainer').classList.add('hidden'); 
+        document.getElementById('cancelBtn').classList.add('hidden'); 
+        document.getElementById('formTitle').innerText="Create New Announcement"; 
+        document.getElementById('submitBtn').innerText="PUBLISH"; 
+    }
+
     function removeExistingPhoto() { document.getElementById('existingImgData').value = ""; document.getElementById('editPreviewContainer').classList.add('hidden'); }
     function toggleScheduleDate() { document.getElementById('scheduleDate').classList.toggle('hidden', document.getElementById('postStatus').value !== 'SCHEDULED'); }
     function logout() { localStorage.removeItem('adminSession'); location.reload(); }
@@ -239,7 +246,18 @@
         cancelEdit(); syncData();
     });
 
-    if(currentAdmin) { showSection('adminDashboard'); document.getElementById('navBtn').innerText = "LOGOUT"; }
+    // AUTO-LOAD DRAFT (Title & Content only)
+    document.getElementById('postTitle').addEventListener('input', () => { if(!document.getElementById('editKey').value) localStorage.setItem('postTitleDraft', document.getElementById('postTitle').value); });
+    document.getElementById('postContent').addEventListener('input', () => { if(!document.getElementById('editKey').value) localStorage.setItem('postContentDraft', document.getElementById('postContent').value); });
+    
+    if(currentAdmin) { 
+        showSection('adminDashboard'); 
+        document.getElementById('navBtn').innerText = "LOGOUT"; 
+        if(!document.getElementById('editKey').value) {
+            document.getElementById('postTitle').value = localStorage.getItem('postTitleDraft') || "";
+            document.getElementById('postContent').value = localStorage.getItem('postContentDraft') || "";
+        }
+    }
     updateOnlineStatus(); syncData();
 </script>
 </body>
