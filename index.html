@@ -9,24 +9,53 @@
     <style>
         :root { --fmnhs-blue: #1a4b8c; --fmnhs-gold: #ffcc00; }
         body { 
-            background: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('fmnhs.jpg'); 
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('fmnhs.jpg'); 
             background-size: cover; background-attachment: fixed; background-position: center;
             font-family: 'Segoe UI', Tahoma, sans-serif; 
         }
+        
+        /* ANIMATION: Fade In Entrance */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* DESIGN: Glassmorphism & Hover Effects */
+        .announcement-card { 
+            animation: fadeInUp 0.6s ease-out;
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px);
+            border: none; border-left: 8px solid var(--fmnhs-blue); 
+            margin-bottom: 30px; border-radius: 12px; overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .announcement-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important; }
+
         .navbar { background-color: var(--fmnhs-blue) !important; border-bottom: 4px solid var(--fmnhs-gold); }
         .school-logo { width: 45px; height: 45px; object-fit: contain; margin-right: 10px; background: white; border-radius: 50%; }
-        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-        .hidden { display: none !important; }
-        .admin-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 30px; }
-        .history-table-container { max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
-        .announcement-card { border: none; border-left: 8px solid var(--fmnhs-blue); margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; border-radius: 10px; overflow: hidden; }
-        .post-img { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; }
-        .comment-box { background: #f8f9fa; padding: 15px; border-top: 1px solid #eee; }
-        .comment-bubble { background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; position: relative; }
-        .admin-managed-row { background: #fffdf2 !important; font-size: 0.85rem; }
+        
+        /* SPINNER DESIGN */
+        #loader { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(26, 75, 140, 0.2); border-top: 5px solid var(--fmnhs-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6); display: none; z-index: 9998; }
+
+        /* LIVE STATUS PULSE */
+        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; position: relative; }
+        .bg-success::after { content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: inherit; border-radius: inherit; animation: pulse 2s infinite; z-index: -1; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } }
+
+        .post-media { width: 100%; max-height: 500px; object-fit: contain; background: #f0f0f0; cursor: zoom-in; transition: 0.3s; }
+        .post-media:active { transform: scale(1.1); }
+        #scrollTopBtn { position: fixed; bottom: 30px; right: 30px; display: none; z-index: 1000; border-radius: 50%; }
+        .comment-box { background: #f8f9fa; padding: 15px; }
+        .comment-bubble { background: white; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.9rem; border: 1px solid #eee; }
     </style>
 </head>
 <body>
+
+<div id="loadingOverlay" class="loading-overlay"></div>
+<div id="loader"><div class="spinner"></div></div>
 
 <nav class="navbar navbar-dark sticky-top mb-4">
     <div class="container d-flex justify-content-between align-items-center">
@@ -35,63 +64,47 @@
             <span>MILITARIANS TODAY</span>
         </div>
         <div class="d-flex align-items-center gap-3">
-            <span id="liveStatus" class="status-badge bg-success text-white">Connecting...</span>
-            <button class="btn btn-warning btn-sm fw-bold shadow-sm" id="navBtn" onclick="toggleAuth()">LOGIN</button>
+            <span id="liveStatus" class="status-badge bg-success text-white">Online</span>
+            <button class="btn btn-warning btn-sm fw-bold" id="navBtn" onclick="toggleAuth()">SIGN IN</button>
         </div>
     </div>
 </nav>
 
+<button id="scrollTopBtn" class="btn btn-primary" onclick="window.scrollTo({top:0, behavior:'smooth'})"><i class="fas fa-arrow-up"></i></button>
+
 <div class="container mb-5">
+    <div id="adminQuickNav" class="card p-2 mb-4 hidden border-0 shadow-sm flex-row justify-content-between align-items-center" style="background: rgba(255,255,255,0.9)">
+        <span class="ps-2 fw-bold">Admin: <span id="adminNameDisplay" class="text-primary"></span></span>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-primary active" id="btnHome" onclick="showSection('publicFeed'); setActiveBtn('btnHome')">Student View</button>
+            <button class="btn btn-sm btn-outline-primary" id="btnDash" onclick="showSection('adminDashboard'); setActiveBtn('btnDash')">Dashboard</button>
+        </div>
+    </div>
+
+    <div class="text-end mb-2"><small id="lastRefresh" class="text-muted fw-bold"></small></div>
+
     <section id="publicFeed">
-        <div class="text-center mb-4">
-            <h1 class="fw-bold" style="color: var(--fmnhs-blue);">CAMPUS BULLETIN</h1>
-            <p class="fw-bold text-secondary">Official School Announcements</p>
-        </div>
-        <div class="mx-auto mb-4" style="max-width:600px;">
-            <input type="text" id="searchInput" class="form-control shadow-sm" placeholder="🔍 Search headline or content..." onkeyup="filterPosts()">
-        </div>
-        <div id="announcementsList" class="row justify-content-center"></div>
+        <div class="row justify-content-center"><div id="announcementsList" class="col-md-9 col-lg-8"></div></div>
     </section>
 
     <section id="loginSection" class="hidden">
-        <div class="card shadow-lg p-4 mx-auto border-0" style="max-width: 380px; margin-top: 50px; border-radius: 15px;">
-            <h5 class="text-center fw-bold mb-4 text-primary">ADMIN ACCESS</h5>
+        <div class="card p-4 mx-auto border-0 shadow" style="max-width: 380px; margin-top: 50px; border-radius: 15px;">
+            <h5 class="text-center fw-bold mb-4">ADMIN ACCESS</h5>
             <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username">
             <input type="password" id="adminPass" class="form-control mb-4" placeholder="Password">
-            <button class="btn btn-primary w-100 fw-bold py-2" onclick="login()">SIGN IN</button>
+            <button class="btn btn-primary w-100 fw-bold" onclick="login()">SIGN IN</button>
         </div>
     </section>
 
     <section id="adminDashboard" class="hidden">
-        <div class="admin-section" style="border-top: 6px solid var(--fmnhs-blue);">
-            <h4 id="formTitle" class="fw-bold text-primary mb-4">Post Management</h4>
+        <div class="card p-4 shadow-sm border-0 mb-4">
+            <h4 class="fw-bold text-primary">Publish News</h4>
             <form id="postForm">
-                <input type="hidden" id="editKey">
-                <input type="hidden" id="existingImgData">
-                <div class="row g-3">
-                    <div class="col-md-7"><label class="small fw-bold">Headline</label><input type="text" id="postTitle" class="form-control" required></div>
-                    <div class="col-md-2"><label class="small fw-bold">Status</label>
-                        <select id="postStatus" class="form-select" onchange="toggleScheduleDate()">
-                            <option value="auto">Auto</option><option value="NEW">NEW</option><option value="OLD">OLD</option><option value="SCHEDULED POST">SCHEDULED POST</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3"><label class="small fw-bold">Date to Release</label><input type="datetime-local" id="scheduleDate" class="form-control hidden"></div>
-                    <div class="col-12"><label class="small fw-bold">Attachment (Optional)</label><input type="file" id="postImage" class="form-control" accept="image/*"></div>
-                    <div class="col-12"><label class="small fw-bold">Content Details</label><textarea id="postContent" class="form-control" rows="4" required></textarea></div>
-                    <div class="col-12"><button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold">SAVE AND PUBLISH</button></div>
-                </div>
+                <input type="text" id="postTitle" class="form-control mb-2" placeholder="Headline" required>
+                <textarea id="postContent" class="form-control mb-2" rows="3" placeholder="Details..." required></textarea>
+                <input type="file" id="postMedia" class="form-control mb-3" accept="image/*,video/*">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">PUBLISH TO BULLETIN</button>
             </form>
-        </div>
-
-        <div class="admin-section shadow-lg">
-            <h4 class="fw-bold text-danger mb-3">Admin Control Center</h4>
-            <div class="history-table-container">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="table-dark"><tr><th>Announcements / Thread</th><th class="text-center">Controls</th></tr></thead>
-                    <tbody id="adminHistoryTable"></tbody>
-                </table>
-            </div>
-            <button class="btn btn-link text-danger mt-3" onclick="logout()">Logout</button>
         </div>
     </section>
 </div>
@@ -99,174 +112,135 @@
 <script>
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
     let announcementsData = {};
+    let currentAdmin = JSON.parse(localStorage.getItem('adminSession'));
 
-    // --- RECOVERY LOGIC: Check admin status EVERY time we render ---
-    function getAdmin() { return JSON.parse(localStorage.getItem('adminSession')); }
-
-    function updateOnlineStatus() {
-        const b = document.getElementById('liveStatus');
-        b.innerHTML = navigator.onLine ? '<i class="fas fa-circle small"></i> Online' : '<i class="fas fa-circle-notch fa-spin small"></i> Offline';
-        b.className = `status-badge ${navigator.onLine ? 'bg-success' : 'bg-danger'} text-white`;
+    function showLoading(s) {
+        document.getElementById('loader').style.display = s ? 'block' : 'none';
+        document.getElementById('loadingOverlay').style.display = s ? 'block' : 'none';
     }
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+
+    // Scroll to Top visibility
+    window.onscroll = () => { document.getElementById("scrollTopBtn").style.display = (window.pageYOffset > 250) ? "block" : "none"; };
 
     async function syncData() {
         if (!navigator.onLine) return;
-        // Don't refresh UI if admin is interacting with inputs
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-
         try {
             const res = await fetch(`${BASE_URL}posts.json`);
             announcementsData = await res.json() || {};
-            renderAll();
-        } catch (e) { console.warn("Sync failed."); }
-    }
-    setInterval(syncData, 4000);
-
-    function renderAll() {
-        const admin = getAdmin();
-        renderPublicFeed(admin);
-        if (admin) renderAdminDashboard(admin);
+            renderUI();
+            document.getElementById('lastRefresh').innerHTML = `<i class="fas fa-sync"></i> ${new Date().toLocaleTimeString()}`;
+        } catch (e) {}
     }
 
-    function renderPublicFeed(admin) {
-        const list = document.getElementById('announcementsList');
-        list.innerHTML = "";
-        const now = new Date();
-
+    function renderUI() {
+        const list = document.getElementById('announcementsList'); list.innerHTML = "";
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !admin && now < new Date(p.scheduledTime)) return;
-
             let commentsHtml = "";
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
                     const c = p.comments[ck];
-                    // IMPORTANT: The admin buttons are generated based on the 'admin' variable we just grabbed from LocalStorage
-                    const adminActions = admin ? `
+                    // FEATURE: Reply and Delete icons for Admin
+                    const adminTools = currentAdmin ? `
                         <div class="ms-2">
-                            <button class="btn btn-sm text-primary p-0 me-2" onclick="prepareReply('${key}','${c.name}')"><i class="fas fa-reply"></i></button>
-                            <button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash-alt"></i></button>
+                            <i class="fas fa-reply text-primary me-2 cursor-pointer" onclick="prepareReply('${key}', '${c.name}')" style="cursor:pointer" title="Reply"></i>
+                            <i class="fas fa-trash text-danger" onclick="deleteComment('${key}','${ck}')" style="cursor:pointer" title="Delete"></i>
                         </div>` : '';
 
                     commentsHtml += `<div class="comment-bubble d-flex justify-content-between align-items-center">
-                        <span><strong>${c.name}:</strong> ${c.text}</span>${adminActions}
+                        <span><strong>${c.name}:</strong> ${c.text}</span>${adminTools}
                     </div>`;
                 });
             }
 
             list.innerHTML += `
-            <div class="col-md-9 col-lg-8 post-wrapper">
-                <div class="card announcement-card">
-                    ${p.image ? `<img src="${p.image}" class="post-img">` : ''}
-                    <div class="card-body p-4">
-                        <h3 class="text-primary fw-bold">${p.title}</h3>
-                        <p style="white-space:pre-wrap;">${p.content}</p>
+            <div class="card announcement-card shadow-sm">
+                ${p.media ? (p.media.includes("video") ? `<video src="${p.media}" class="post-media" controls></video>` : `<img src="${p.media}" class="post-media">`) : ''}
+                <div class="card-body">
+                    <h3 class="fw-bold text-primary">${p.title}</h3>
+                    <p>${p.content}</p>
+                    <div class="d-flex justify-content-between small text-muted border-top pt-2">
+                        <span><i class="fas fa-user-edit"></i> ${p.adminName || 'Admin'}</span>
+                        <span><i class="fas fa-calendar-alt"></i> ${p.datePosted}</span>
                     </div>
-                    <div class="comment-box">
-                        <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet.</small>'}</div>
-                        <div class="input-group mt-2">
-                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width:100px" placeholder="Name" ${admin?'value="Admin" readonly':''}>
-                            <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
-                            <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
-                        </div>
+                </div>
+                <div class="comment-box">
+                    <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet.</small>'}</div>
+                    <div class="input-group mt-2">
+                        <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Add comment...">
+                        <button class="btn btn-primary btn-sm" onclick="addComment('${key}')"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
             </div>`;
         });
-        filterPosts();
     }
 
-    function renderAdminDashboard(admin) {
-        const tbody = document.getElementById('adminHistoryTable');
-        tbody.innerHTML = "";
-        Object.keys(announcementsData).reverse().forEach(key => {
-            const p = announcementsData[key];
-            tbody.innerHTML += `<tr class="table-primary">
-                <td><strong>${p.title}</strong><br><small class="text-muted">Posted: ${p.datePosted}</small></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-dark me-1" onclick="startEdit('${key}')">EDIT</button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">DELETE POST</button>
-                </td>
-            </tr>`;
-            if (p.comments) {
-                Object.keys(p.comments).forEach(ck => {
-                    tbody.innerHTML += `<tr class="admin-managed-row">
-                        <td class="ps-4 italic text-muted">Comment by ${p.comments[ck].name}: ${p.comments[ck].text}</td>
-                        <td class="text-center"><button class="btn btn-sm btn-link text-danger p-0" onclick="deleteComment('${key}','${ck}')">Remove Comment</button></td>
-                    </tr>`;
-                });
-            }
-        });
+    function prepareReply(pk, name) {
+        const input = document.getElementById(`text-${pk}`);
+        input.value = `@${name}: `;
+        input.focus();
     }
 
-    // --- ACTIONS ---
     async function addComment(pk) {
-        const n = document.getElementById(`name-${pk}`).value || "Guest";
         const t = document.getElementById(`text-${pk}`).value;
         if(!t) return;
+        const n = currentAdmin ? "Admin ("+currentAdmin.name+")" : "Student";
+        showLoading(true);
         await fetch(`${BASE_URL}posts/${pk}/comments.json`, {method:"POST", body:JSON.stringify({name:n, text:t})});
-        document.getElementById(`text-${pk}`).value = ""; syncData();
+        document.getElementById(`text-${pk}`).value = "";
+        showLoading(false);
+        syncData();
     }
 
-    async function deleteComment(pk, ck) { if(confirm("Confirm Delete Comment?")) { await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); syncData(); } }
-    async function deletePost(key) { if(confirm("Confirm Delete Entire Post?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); syncData(); } }
-    function prepareReply(pk, name) { const i = document.getElementById(`text-${pk}`); i.value = `@${name} `; i.focus(); }
+    async function deleteComment(pk, ck) { if(confirm("Delete comment?")) { showLoading(true); await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); showLoading(false); syncData(); } }
 
     async function login() {
         const u = document.getElementById('adminUser').value;
         const p = document.getElementById('adminPass').value;
+        showLoading(true);
         const res = await fetch(`${BASE_URL}admins/${u}.json`);
         const d = await res.json();
+        showLoading(false);
         if(d && d.password === p) {
             localStorage.setItem('adminSession', JSON.stringify({name: d.name}));
-            location.reload(); 
-        } else alert("Invalid Login Credentials");
+            location.reload();
+        } else alert("Invalid Login");
     }
 
     function logout() { localStorage.removeItem('adminSession'); location.reload(); }
-    function toggleAuth() { if(getAdmin()) logout(); else showSection('loginSection'); }
-    function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
-    function filterPosts() { const q = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('.post-wrapper').forEach(p => p.classList.toggle('hidden', !p.innerText.toLowerCase().includes(q))); }
-    function toggleScheduleDate() { document.getElementById('scheduleDate').classList.toggle('hidden', document.getElementById('postStatus').value !== 'SCHEDULED'); }
-
-    // Start
-    updateOnlineStatus();
-    const activeAdmin = getAdmin();
-    if(activeAdmin) {
-        showSection('adminDashboard');
-        document.getElementById('navBtn').innerText = "LOGOUT";
+    function showSection(id) { 
+        ['publicFeed', 'adminDashboard', 'loginSection'].forEach(s => document.getElementById(s).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
     }
-    syncData();
+    function setActiveBtn(id) { document.getElementById('btnHome').classList.remove('active'); document.getElementById('btnDash').classList.remove('active'); document.getElementById(id).classList.add('active'); }
+    function toggleAuth() { if(currentAdmin) logout(); else showSection('loginSection'); }
 
-    // Image Upload Logic
-    const toBase64 = f => new Promise((res, rej) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result); r.onerror = e => rej(e); });
+    if(currentAdmin) {
+        document.getElementById('adminQuickNav').classList.remove('hidden');
+        document.getElementById('adminNameDisplay').innerText = currentAdmin.name;
+        document.getElementById('navBtn').innerText = "SIGN OUT";
+        showSection('adminDashboard');
+        setActiveBtn('btnDash');
+    }
+
+    syncData();
+    setInterval(syncData, 5000);
+
+    const toBase64 = f => new Promise((res) => { const r = new FileReader(); r.readAsDataURL(f); r.onload = () => res(r.result); });
     document.getElementById('postForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const ek = document.getElementById('editKey').value;
-        const f = document.getElementById('postImage').files[0];
-        const admin = getAdmin();
-        const img = f ? await toBase64(f) : document.getElementById('existingImgData').value;
+        showLoading(true);
+        const f = document.getElementById('postMedia').files[0];
         const post = {
-            title: document.getElementById('postTitle').value, content: document.getElementById('postContent').value,
-            manualStatus: document.getElementById('postStatus').value, scheduledTime: document.getElementById('scheduleDate').value,
-            image: img, postedBy: admin.name, datePosted: new Date().toLocaleString()
+            title: document.getElementById('postTitle').value,
+            content: document.getElementById('postContent').value,
+            media: f ? await toBase64(f) : "",
+            adminName: currentAdmin.name,
+            datePosted: new Date().toLocaleString()
         };
-        await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { method: ek ? "PATCH" : "POST", body: JSON.stringify(post) });
+        await fetch(`${BASE_URL}posts.json`, { method: "POST", body: JSON.stringify(post) });
         location.reload();
     });
-
-    function startEdit(key) {
-        const p = announcementsData[key];
-        document.getElementById('editKey').value = key;
-        document.getElementById('postTitle').value = p.title;
-        document.getElementById('postContent').value = p.content;
-        document.getElementById('existingImgData').value = p.image || "";
-        document.getElementById('formTitle').innerText = "Editing: " + p.title;
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    }
 </script>
 </body>
 </html>
-
