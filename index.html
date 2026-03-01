@@ -163,16 +163,11 @@
     let announcementsData = {};
     let lastDataHash = ""; 
 
-    // 1. CLOUDINARY UPLOAD FUNCTION
     async function uploadToCloudinary(file) {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "bjo7zgjg"); // REPLACE THIS
-        
-        const res = await fetch("https://api.cloudinary.com/v1_1/dej8gf3yl/upload", { // REPLACE THIS
-            method: "POST",
-            body: formData
-        });
+        formData.append("upload_preset", "bjo7zgjg");
+        const res = await fetch("https://api.cloudinary.com/v1_1/dej8gf3yl/upload", { method: "POST", body: formData });
         return await res.json();
     }
 
@@ -215,8 +210,11 @@
 
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
-            if (p.manualStatus === "SCHEDULED" && p.scheduledTime && !admin && now < new Date(p.scheduledTime)) return;
+            
+            // Logic for Hidden Scheduled Posts
+            if (p.manualStatus === "SCHEDULED POST" && p.scheduledTime && !admin && now < new Date(p.scheduledTime)) return;
 
+            // Media HTML
             let mediaHtml = "";
             if (p.image) {
                 if (p.isVideo) {
@@ -226,6 +224,11 @@
                 }
             }
 
+            // Determine Status Badge Color
+            let statusColor = p.manualStatus === "NEW" ? "warning text-dark" : "secondary";
+            if (p.manualStatus === "SCHEDULED POST") statusColor = "info text-white";
+
+            // Comments HTML
             let commentsHtml = "";
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
@@ -240,11 +243,15 @@
                 <div class="card announcement-card">
                     ${mediaHtml}
                     <div class="card-body p-4">
-                        <h3 class="text-primary fw-bold">${p.title}</h3>
-                        <p style="white-space:pre-wrap;">${p.content}</p>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-${statusColor} mb-2">${p.manualStatus || 'General'}</span>
+                            <small class="text-muted"><i class="far fa-clock"></i> ${p.datePosted || 'Just now'}</small>
+                        </div>
+                        <h3 class="text-primary fw-bold mb-3">${p.title}</h3>
+                        <p style="white-space:pre-wrap; color: #444; line-height: 1.6;">${p.content}</p>
                     </div>
                     <div class="comment-box">
-                        <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet.</small>'}</div>
+                        <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet. Be the first to react!</small>'}</div>
                         <div class="input-group mt-2">
                             <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width:100px" placeholder="Name" ${admin?'value="Admin" readonly':''}>
                             <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
@@ -263,7 +270,10 @@
         Object.keys(announcementsData).reverse().forEach(key => {
             const p = announcementsData[key];
             tbody.innerHTML += `<tr class="table-primary">
-                <td><strong>${p.title}</strong><br><small class="text-muted">Posted: ${p.datePosted}</small></td>
+                <td>
+                    <strong>${p.title}</strong><br>
+                    <small class="text-muted">Status: ${p.manualStatus} | Posted: ${p.datePosted}</small>
+                </td>
                 <td class="text-center">
                     <button class="btn btn-sm btn-dark me-1" onclick="startEdit('${key}')">EDIT</button>
                     <button class="btn btn-sm btn-danger" onclick="deletePost('${key}')">DELETE</button>
@@ -301,13 +311,11 @@
     function filterPosts() { const q = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('.post-wrapper').forEach(p => p.classList.toggle('hidden', !p.innerText.toLowerCase().includes(q))); }
     function toggleScheduleDate() { document.getElementById('scheduleDate').classList.toggle('hidden', document.getElementById('postStatus').value !== 'SCHEDULED POST'); }
 
-    // SUBMIT FORM
     document.getElementById('postForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const file = document.getElementById('postImage').files[0];
         let mediaUrl = document.getElementById('existingImgData').value;
         let isVideo = document.getElementById('existingIsVideo').value === "true";
-
         const btn = document.getElementById('submitBtn');
         btn.innerText = "UPLOADING..."; btn.disabled = true;
 
@@ -324,8 +332,8 @@
             isVideo: isVideo,
             manualStatus: document.getElementById('postStatus').value,
             scheduledTime: document.getElementById('scheduleDate').value,
-            postedBy: getAdmin().name,
-            datePosted: new Date().toLocaleString()
+            postedBy: getAdmin() ? getAdmin().name : "Unknown",
+            datePosted: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
         };
 
         const ek = document.getElementById('editKey').value;
@@ -340,6 +348,7 @@
         document.getElementById('postContent').value = p.content;
         document.getElementById('existingImgData').value = p.image || "";
         document.getElementById('existingIsVideo').value = p.isVideo || false;
+        document.getElementById('postStatus').value = p.manualStatus || "auto";
         document.getElementById('formTitle').innerText = "Editing: " + p.title;
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
@@ -350,5 +359,6 @@
 </script>
 </body>
 </html>
+
 
 
