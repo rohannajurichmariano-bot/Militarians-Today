@@ -15,7 +15,19 @@
             font-family: 'Segoe UI', Roboto, sans-serif; 
             color: #333;
         }
-
+.comment-admin { 
+    background: #eef4ff !important; 
+    border-left: 3px solid var(--fmnhs-blue) !important; 
+}
+.admin-badge-small { 
+    font-size: 0.65rem; 
+    background: var(--fmnhs-blue); 
+    color: white; 
+    padding: 2px 5px; 
+    border-radius: 4px; 
+    margin-left: 5px; 
+    text-transform: uppercase; 
+}
         /* --- THEMED SCROLLBAR --- */
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -204,65 +216,73 @@
     }
 
     function renderPublicFeed(admin) {
-        const list = document.getElementById('announcementsList');
-        list.innerHTML = "";
-        const now = new Date();
+    const list = document.getElementById('announcementsList');
+    list.innerHTML = "";
+    const now = new Date();
 
-        Object.keys(announcementsData).reverse().forEach(key => {
-            const p = announcementsData[key];
-            
-            // Logic for Hidden Scheduled Posts
-            if (p.manualStatus === "SCHEDULED POST" && p.scheduledTime && !admin && now < new Date(p.scheduledTime)) return;
+    Object.keys(announcementsData).reverse().forEach(key => {
+        const p = announcementsData[key];
+        
+        // Hide scheduled posts from students
+        if (p.manualStatus === "SCHEDULED POST" && p.scheduledTime && !admin && now < new Date(p.scheduledTime)) return;
 
-            // Media HTML
-            let mediaHtml = "";
-            if (p.image) {
-                if (p.isVideo) {
-                    mediaHtml = `<video controls playsinline class="post-img" style="background:#000; width:100%"><source src="${p.image}" type="video/mp4"></video>`;
-                } else {
-                    mediaHtml = `<img src="${p.image}" class="post-img">`;
-                }
-            }
+        let mediaHtml = "";
+        if (p.image) {
+            mediaHtml = p.isVideo 
+                ? `<video controls playsinline class="post-img" style="background:#000; width:100%"><source src="${p.image}" type="video/mp4"></video>`
+                : `<img src="${p.image}" class="post-img">`;
+        }
 
-            // Determine Status Badge Color
-            let statusColor = p.manualStatus === "NEW" ? "warning text-dark" : "secondary";
-            if (p.manualStatus === "SCHEDULED POST") statusColor = "info text-white";
+        // 1. STATUS BADGE COLOR LOGIC
+        let statusColor = p.manualStatus === "NEW" ? "warning text-dark" : "secondary";
+        if (p.manualStatus === "SCHEDULED POST") statusColor = "info text-white";
 
-            // Comments HTML
-            let commentsHtml = "";
-            if (p.comments) {
-                Object.keys(p.comments).forEach(ck => {
-                    const c = p.comments[ck];
-                    const adminActions = admin ? `<div class="ms-2"><button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                    commentsHtml += `<div class="comment-bubble d-flex justify-content-between align-items-center"><span><strong>${c.name}:</strong> ${c.text}</span>${adminActions}</div>`;
-                });
-            }
+        // 2. COMMENT RENDERING WITH ADMIN STYLING
+        let commentsHtml = "";
+        if (p.comments) {
+            Object.keys(p.comments).forEach(ck => {
+                const c = p.comments[ck];
+                const isAdmin = c.name === "Admin";
+                const adminActions = admin ? `<div class="ms-2"><button class="btn btn-sm text-danger p-0" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                
+                commentsHtml += `
+                    <div class="comment-bubble d-flex justify-content-between align-items-center ${isAdmin ? 'comment-admin' : ''}">
+                        <span>
+                            <strong>${c.name}${isAdmin ? '<span class="admin-badge-small">Verified</span>' : ''}:</strong> 
+                            ${c.text}
+                        </span>
+                        ${adminActions}
+                    </div>`;
+            });
+        }
 
-            list.innerHTML += `
-            <div class="col-md-9 col-lg-8 post-wrapper">
-                <div class="card announcement-card">
-                    ${mediaHtml}
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-${statusColor} mb-2">${p.manualStatus || 'General'}</span>
-                            <small class="text-muted"><i class="far fa-clock"></i> ${p.datePosted || 'Just now'}</small>
-                        </div>
-                        <h3 class="text-primary fw-bold mb-3">${p.title}</h3>
-                        <p style="white-space:pre-wrap; color: #444; line-height: 1.6;">${p.content}</p>
+        list.innerHTML += `
+        <div class="col-md-9 col-lg-8 post-wrapper">
+            <div class="card announcement-card">
+                ${mediaHtml}
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-${statusColor} mb-2">${p.manualStatus || 'General'}</span>
+                        <small class="text-muted"><i class="far fa-clock"></i> ${p.datePosted || 'Just now'}</small>
                     </div>
-                    <div class="comment-box">
-                        <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet. Be the first to react!</small>'}</div>
-                        <div class="input-group mt-2">
-                            <input type="text" id="name-${key}" class="form-control form-control-sm" style="max-width:100px" placeholder="Name" ${admin?'value="Admin" readonly':''}>
-                            <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a comment...">
-                            <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
-                        </div>
+                    <h3 class="text-primary fw-bold mb-3">${p.title}</h3>
+                    <p style="white-space:pre-wrap; color: #444; line-height: 1.6;">${p.content}</p>
+                </div>
+                <div class="comment-box">
+                    <div id="comments-${key}">${commentsHtml || '<small class="text-muted">No comments yet.</small>'}</div>
+                    <div class="input-group mt-2">
+                        <input type="text" id="name-${key}" class="form-control form-control-sm" 
+                               style="max-width:100px" placeholder="Name" 
+                               ${admin ? 'value="Admin" readonly' : ''}>
+                        <input type="text" id="text-${key}" class="form-control form-control-sm" placeholder="Write a reply...">
+                        <button class="btn btn-primary btn-sm" onclick="addComment('${key}')">POST</button>
                     </div>
                 </div>
-            </div>`;
-        });
-        filterPosts();
-    }
+            </div>
+        </div>`;
+    });
+    filterPosts();
+}
 
     function renderAdminDashboard(admin) {
         const tbody = document.getElementById('adminHistoryTable');
@@ -333,8 +353,12 @@
             manualStatus: document.getElementById('postStatus').value,
             scheduledTime: document.getElementById('scheduleDate').value,
             postedBy: getAdmin() ? getAdmin().name : "Unknown",
-            datePosted: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        };
+datePosted: new Date().toLocaleString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit' 
+})
 
         const ek = document.getElementById('editKey').value;
         await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { method: ek ? "PATCH" : "POST", body: JSON.stringify(post) });
@@ -359,6 +383,7 @@
 </script>
 </body>
 </html>
+
 
 
 
