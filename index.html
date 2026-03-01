@@ -57,12 +57,16 @@
 
         /* ANNOUNCEMENT CARDS */
         .announcement-card { 
-            animation: fadeInUp 0.7s ease-out both;
-            border: none; border-left: 8px solid var(--fmnhs-blue); 
-            margin-bottom: 35px; background: white; border-radius: 15px; 
-            overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
+    animation: fadeInUp 0.7s ease-out forwards; /* Changed from 'both' to 'forwards' */
+    border: none; 
+    border-left: 8px solid var(--fmnhs-blue); 
+    margin-bottom: 35px; 
+    background: white; 
+    border-radius: 15px; 
+    overflow: hidden; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
         .announcement-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
 
         .post-img { width: 100%; max-height: 520px; object-fit: contain; background: #f8f9fa; border-bottom: 1px solid #eee; }
@@ -152,7 +156,8 @@
 
 <script>
     const BASE_URL = "https://militarians-bulletin-default-rtdb.firebaseio.com/";
-    let announcementsData = {};
+let announcementsData = {};
+let lastDataHash = ""; // 
 
     // --- RECOVERY LOGIC: Check admin status EVERY time we render ---
     function getAdmin() { return JSON.parse(localStorage.getItem('adminSession')); }
@@ -166,16 +171,26 @@
     window.addEventListener('offline', updateOnlineStatus);
 
     async function syncData() {
-        if (!navigator.onLine) return;
-        // Don't refresh UI if admin is interacting with inputs
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    if (!navigator.onLine) return;
+    
+    // Don't refresh if the user is currently typing
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
 
-        try {
-            const res = await fetch(`${BASE_URL}posts.json`);
-            announcementsData = await res.json() || {};
+    try {
+        const res = await fetch(`${BASE_URL}posts.json`);
+        const data = await res.json() || {};
+        
+        // Generate a "fingerprint" of the data
+        const currentHash = JSON.stringify(data);
+        
+        // ONLY re-render if the fingerprint is different (New post/comment/edit)
+        if (currentHash !== lastDataHash) {
+            announcementsData = data;
+            lastDataHash = currentHash;
             renderAll();
-        } catch (e) { console.warn("Sync failed."); }
-    }
+        }
+    } catch (e) { console.warn("Sync failed."); }
+}
     setInterval(syncData, 4000);
 
     function renderAll() {
@@ -257,15 +272,30 @@
 
     // --- ACTIONS ---
     async function addComment(pk) {
-        const n = document.getElementById(`name-${pk}`).value || "Guest";
-        const t = document.getElementById(`text-${pk}`).value;
-        if(!t) return;
-        await fetch(`${BASE_URL}posts/${pk}/comments.json`, {method:"POST", body:JSON.stringify({name:n, text:t})});
-        document.getElementById(`text-${pk}`).value = ""; syncData();
-    }
+    const n = document.getElementById(`name-${pk}`).value || "Guest";
+    const t = document.getElementById(`text-${pk}`).value;
+    if(!t) return;
+    await fetch(`${BASE_URL}posts/${pk}/comments.json`, {method:"POST", body:JSON.stringify({name:n, text:t})});
+    document.getElementById(`text-${pk}`).value = ""; 
+    lastDataHash = ""; // <--- Forces the syncData to see a "change"
+    syncData();
+}
 
-    async function deleteComment(pk, ck) { if(confirm("Confirm Delete Comment?")) { await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); syncData(); } }
-    async function deletePost(key) { if(confirm("Confirm Delete Entire Post?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); syncData(); } }
+async function deleteComment(pk, ck) { 
+    if(confirm("Delete Comment?")) { 
+        await fetch(`${BASE_URL}posts/${pk}/comments/${ck}.json`, {method:"DELETE"}); 
+        lastDataHash = ""; // <--- Forces refresh
+        syncData(); 
+    } 
+}
+
+async function deletePost(key) { 
+    if(confirm("Delete Post?")) { 
+        await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); 
+        lastDataHash = ""; // <--- Forces refresh
+        syncData(); 
+    } 
+}
     function prepareReply(pk, name) { const i = document.getElementById(`text-${pk}`); i.value = `@${name} `; i.focus(); }
 
     async function login() {
@@ -323,6 +353,7 @@
 </script>
 </body>
 </html>
+
 
 
 
