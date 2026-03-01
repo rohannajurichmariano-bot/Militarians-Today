@@ -328,7 +328,6 @@
 
     function logout() { localStorage.removeItem('adminSession'); location.reload(); }
     function toggleAuth() { if(getAdmin()) logout(); else showSection('loginSection'); }
-    function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
     function filterPosts() { const q = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('.post-wrapper').forEach(p => p.classList.toggle('hidden', !p.innerText.toLowerCase().includes(q))); }
     function toggleScheduleDate() { document.getElementById('scheduleDate').classList.toggle('hidden', document.getElementById('postStatus').value !== 'SCHEDULED POST'); }
 
@@ -396,6 +395,7 @@
 </script>
 </body>
 </html>
+
 
 
 
