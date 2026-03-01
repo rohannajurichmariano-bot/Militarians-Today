@@ -353,15 +353,20 @@
             manualStatus: document.getElementById('postStatus').value,
             scheduledTime: document.getElementById('scheduleDate').value,
             postedBy: getAdmin() ? getAdmin().name : "Unknown",
-datePosted: new Date().toLocaleString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-})
+            // FIXED THE BRACKETS HERE:
+            datePosted: new Date().toLocaleString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            })
+        };
 
         const ek = document.getElementById('editKey').value;
-        await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { method: ek ? "PATCH" : "POST", body: JSON.stringify(post) });
+        await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { 
+            method: ek ? "PATCH" : "POST", 
+            body: JSON.stringify(post) 
+        });
         location.reload();
     });
 
@@ -383,6 +388,7 @@ datePosted: new Date().toLocaleString('en-US', {
 </script>
 </body>
 </html>
+
 
 
 
