@@ -100,7 +100,7 @@
 
 <nav class="navbar navbar-dark sticky-top mb-4">
     <div class="container d-flex justify-content-between align-items-center">
-        <div class="navbar-brand d-flex align-items-center fw-bold m-0" onclick="location.reload()" style="cursor:pointer">
+        <div class="navbar-brand d-flex align-items-center fw-bold m-0" onclick="showSection('publicFeed')" style="cursor:pointer">
             <img src="logofmnhs.jpg" alt="Logo" class="school-logo"> 
             <span>MILITARIANS TODAY</span>
         </div>
@@ -175,6 +175,19 @@
     let announcementsData = {};
     let lastDataHash = ""; 
 
+    let deleteTimer;
+
+function startHold(pk, ck) {
+    deleteTimer = setTimeout(() => {
+        if(confirm("Delete this comment permanently?")) {
+            deleteComment(pk, ck);
+        }
+    }, 1000); // 1 second hold
+}
+
+function clearHold() {
+    clearTimeout(deleteTimer);
+}
     async function uploadToCloudinary(file) {
         const formData = new FormData();
         formData.append("file", file);
@@ -236,13 +249,19 @@
             if (p.comments) {
                 Object.keys(p.comments).forEach(ck => {
                     const c = p.comments[ck];
-                    const isAdmin = c.name === "Admin";
-                    const adminActions = admin ? `<button class="btn btn-sm text-danger p-0 ms-2" onclick="deleteComment('${key}','${ck}')"><i class="fas fa-trash-alt"></i></button>` : '';
+                    const isAdminComment = c.name === "Admin";
+                    
+                    // This creates the "Hold" triggers ONLY if you are logged in as Admin
+                    const adminActions = admin ? `onmousedown="startHold('${key}','${ck}')" onmouseup="clearHold()" ontouchstart="startHold('${key}','${ck}')" ontouchend="clearHold()"` : '';
                     
                     commentsHtml += `
-                        <div class="comment-bubble d-flex justify-content-between align-items-center ${isAdmin ? 'comment-admin' : ''}">
-                            <span><strong>${c.name}${isAdmin ? '<span class="admin-badge-small">Verified</span>' : ''}:</strong> ${c.text}</span>
-                            ${adminActions}
+                        <div class="comment-bubble d-flex justify-content-between align-items-center ${isAdminComment ? 'comment-admin' : ''}" 
+                             ${adminActions} style="cursor: pointer;">
+                            <span>
+                                <strong>${c.name}${isAdminComment ? '<span class="admin-badge-small">Verified</span>' : ''}:</strong> 
+                                ${c.text}
+                            </span>
+                            ${admin ? '<small class="text-muted" style="font-size: 10px;">(Hold to delete)</small>' : ''}
                         </div>`;
                 });
             }
@@ -365,6 +384,7 @@
 </script>
 </body>
 </html>
+
 
 
 
