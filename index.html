@@ -274,21 +274,27 @@
     }
     // --- NAVIGATION LOGIC ---
     function showSection(id) { 
+        // 1. Hide all sections
         document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        
+        // 2. Show the requested section
         const target = document.getElementById(id);
         if(target) target.classList.remove('hidden');
 
+        // 3. Handle Navbar Buttons
         const admin = getAdmin();
         const homeBtn = document.getElementById('homeBtn');
         const navBtn = document.getElementById('navBtn');
 
         if (admin) {
             navBtn.innerText = "LOGOUT";
-            homeBtn.classList.remove('hidden');
+            // Show HOME button only if the admin is currently looking at the Dashboard
             if (id === 'adminDashboard') {
-                homeBtn.innerText = "HOME";
-                homeBtn.onclick = () => showSection('publicFeed');
+                homeBtn.classList.remove('hidden');
             } else {
+                // If the admin is already on the Home page, change the button to "ADMIN" 
+                // so they can get back to work.
+                homeBtn.classList.remove('hidden');
                 homeBtn.innerText = "ADMIN PANEL";
                 homeBtn.onclick = () => showSection('adminDashboard');
             }
@@ -316,7 +322,7 @@
         const d = await res.json();
         if(d && d.password === p) {
             localStorage.setItem('adminSession', JSON.stringify({name: d.name}));
-            location.reload(); 
+            showSection('adminDashboard'); // Takes you straight to admin area
         } else alert("Invalid Login Credentials");
     }
 
@@ -390,6 +396,7 @@
 </script>
 </body>
 </html>
+
 
 
 
