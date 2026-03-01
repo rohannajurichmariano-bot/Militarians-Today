@@ -163,13 +163,12 @@
     let announcementsData = {};
     let lastDataHash = ""; 
 
-    // 1. CLOUDINARY UPLOAD FUNCTION
     async function uploadToCloudinary(file) {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "bjo7zgjg"); // REPLACE THIS
+        formData.append("upload_preset", "bjo7zgjg"); 
         
-        const res = await fetch("https://api.cloudinary.com/v1_1/dej8gf3yl/upload", { // REPLACE THIS
+        const res = await fetch("https://api.cloudinary.com/v1_1/dej8gf3yl/upload", { 
             method: "POST",
             body: formData
         });
@@ -309,28 +308,40 @@
         let isVideo = document.getElementById('existingIsVideo').value === "true";
 
         const btn = document.getElementById('submitBtn');
+        const originalBtnText = btn.innerText;
         btn.innerText = "UPLOADING..."; btn.disabled = true;
 
-        if (file) {
-            const cloudData = await uploadToCloudinary(file);
-            mediaUrl = cloudData.secure_url;
-            isVideo = file.type.includes('video');
+        try {
+            if (file) {
+                const cloudData = await uploadToCloudinary(file);
+                mediaUrl = cloudData.secure_url;
+                isVideo = file.type.includes('video');
+            }
+
+            const post = {
+                title: document.getElementById('postTitle').value,
+                content: document.getElementById('postContent').value,
+                image: mediaUrl,
+                isVideo: isVideo,
+                manualStatus: document.getElementById('postStatus').value,
+                scheduledTime: document.getElementById('scheduleDate').value,
+                postedBy: getAdmin().name,
+                datePosted: new Date().toLocaleString()
+            };
+
+            const ek = document.getElementById('editKey').value;
+            await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { 
+                method: ek ? "PATCH" : "POST", 
+                body: JSON.stringify(post) 
+            });
+
+            alert("Success! Your post has been published.");
+            location.reload();
+        } catch (error) {
+            alert("Error: " + error.message);
+            btn.innerText = originalBtnText;
+            btn.disabled = false;
         }
-
-        const post = {
-            title: document.getElementById('postTitle').value,
-            content: document.getElementById('postContent').value,
-            image: mediaUrl,
-            isVideo: isVideo,
-            manualStatus: document.getElementById('postStatus').value,
-            scheduledTime: document.getElementById('scheduleDate').value,
-            postedBy: getAdmin().name,
-            datePosted: new Date().toLocaleString()
-        };
-
-        const ek = document.getElementById('editKey').value;
-        await fetch(ek ? `${BASE_URL}posts/${ek}.json` : `${BASE_URL}posts.json`, { method: ek ? "PATCH" : "POST", body: JSON.stringify(post) });
-        location.reload();
     });
 
     function startEdit(key) {
@@ -340,7 +351,10 @@
         document.getElementById('postContent').value = p.content;
         document.getElementById('existingImgData').value = p.image || "";
         document.getElementById('existingIsVideo').value = p.isVideo || false;
-        document.getElementById('formTitle').innerText = "Editing: " + p.title;
+        document.getElementById('postStatus').value = p.manualStatus || "auto";
+        document.getElementById('scheduleDate').value = p.scheduledTime || "";
+        document.getElementById('formTitle').innerHTML = `Editing: ${p.title} <button class="btn btn-sm btn-outline-secondary ms-2" onclick="location.reload()">Cancel</button>`;
+        toggleScheduleDate();
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
@@ -350,6 +364,7 @@
 </script>
 </body>
 </html>
+
 
 
 
