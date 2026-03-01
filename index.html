@@ -227,7 +227,49 @@ function clearHold() {
     }
 
     function getAdmin() { return JSON.parse(localStorage.getItem('adminSession')); }
+    function initCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) return;
 
+    const events = [];
+
+    // This part loops through your Firebase posts (announcementsData)
+    Object.keys(announcementsData).forEach(key => {
+        const p = announcementsData[key];
+        
+        // We convert your stored "Date Posted" into something the calendar understands
+        const postDate = new Date(p.datePosted);
+
+        if (!isNaN(postDate.getTime())) {
+            events.push({
+                title: p.title,
+                start: postDate,
+                backgroundColor: '#1a4b8c', // FMNHS Blue
+                borderColor: '#ffcc00',     // FMNHS Gold
+                allDay: true // Set to true to show as a solid bar on the day
+            });
+        }
+    });
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        themeSystem: 'bootstrap5',
+        height: 'auto',
+        events: events,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,listMonth' // List view is great for mobile!
+        },
+        eventClick: function(info) {
+            // When someone clicks a calendar event, it takes them back to the feed
+            showSection('publicFeed');
+            alert("Checking Post: " + info.event.title);
+        }
+    });
+
+    calendar.render();
+}
     function updateOnlineStatus() {
         const b = document.getElementById('liveStatus');
         if(!b) return;
@@ -414,6 +456,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
