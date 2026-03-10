@@ -161,16 +161,16 @@
         </div>
 
         <div id="authTitle" class="text-center mb-4">
-            <h5 class="fw-bold text-primary">STAFF LOGIN</h5>
+            <h5 class="fw-bold text-primary">ADMIN LOGIN</h5>
         </div>
 
-        <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username (no spaces)">
+        <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username">
         <input type="password" id="adminPass" class="form-control mb-3" placeholder="Password">
         
         <div id="signupFields" class="hidden">
-            <input type="text" id="adminDisplayName" class="form-control mb-3" placeholder="Your Full Name (e.g. Mr. Smith)">
-            <label class="small fw-bold text-danger">Secret Authorization Code</label>
-            <input type="text" id="authCode" class="form-control mb-4" placeholder="Enter 6-Digit Code">
+            <input type="text" id="adminDisplayName" class="form-control mb-3" placeholder="Name">
+            <label class="small fw-bold text-danger">Authorization Code</label>
+            <input type="text" id="authCode" class="form-control mb-4" placeholder="Enter Code">
         </div>
 
         <button id="authBtn" class="btn btn-primary w-100 fw-bold py-2" onclick="login()">SIGN IN</button>
@@ -541,6 +541,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
