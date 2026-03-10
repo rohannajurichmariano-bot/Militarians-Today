@@ -154,13 +154,19 @@
     </section>
 
     <section id="loginSection" class="hidden">
-        <div class="card shadow-lg p-4 mx-auto border-0" style="max-width: 380px; margin-top: 50px; border-radius: 15px;">
-            <h5 class="text-center fw-bold mb-4 text-primary">ADMIN ACCESS</h5>
-            <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username">
-            <input type="password" id="adminPass" class="form-control mb-4" placeholder="Password">
-            <button class="btn btn-primary w-100 fw-bold py-2" onclick="login()">SIGN IN</button>
-        </div>
-    </section>
+    <div class="card shadow-lg p-4 mx-auto border-0" style="max-width: 380px; margin-top: 50px; border-radius: 15px;">
+        <h5 class="text-center fw-bold mb-2 text-primary">STAFF ACCESS</h5>
+        <p class="text-center text-muted small mb-4">Authorized Personnel Only</p>
+        
+        <input type="text" id="adminUser" class="form-control mb-3" placeholder="Teacher Name / Username">
+        <input type="password" id="adminPass" class="form-control mb-3" placeholder="Password">
+        
+        <label class="small fw-bold text-danger">Secret Authorization Code</label>
+        <input type="text" id="authCode" class="form-control mb-4" placeholder="Enter 6-Digit Code">
+        
+        <button class="btn btn-primary w-100 fw-bold py-2" onclick="login()">AUTHORIZE & SIGN IN</button>
+    </div>
+</section>
 
     <section id="adminDashboard" class="hidden">
         <div class="admin-section" style="border-top: 6px solid var(--fmnhs-blue);">
@@ -392,15 +398,31 @@ function clearHold() {
     async function deletePost(key) { if(confirm("Delete Post?")) { await fetch(`${BASE_URL}posts/${key}.json`, {method:"DELETE"}); lastDataHash = ""; syncData(); } }
 
     async function login() {
-        const u = document.getElementById('adminUser').value;
-        const p = document.getElementById('adminPass').value;
+    const u = document.getElementById('adminUser').value;
+    const p = document.getElementById('adminPass').value;
+    const codeInput = document.getElementById('authCode').value;
+
+    try {
+        // 1. Fetch the user data
         const res = await fetch(`${BASE_URL}admins/${u}.json`);
         const d = await res.json();
-        if(d && d.password === p) {
-            localStorage.setItem('adminSession', JSON.stringify({name: d.name}));
+
+        // 2. Fetch the "Secret Code" from a private folder in Firebase
+        // Create a folder in Firebase named 'settings' with a key 'teacherCode'
+        const codeRes = await fetch(`${BASE_URL}settings/teacherCode.json`);
+        const validCode = await codeRes.json();
+
+        if (d && d.password === p && codeInput === validCode) {
+            localStorage.setItem('adminSession', JSON.stringify({ name: d.name }));
+            alert("Authorization Successful!");
             location.reload(); 
-        } else alert("Invalid Login");
+        } else {
+            alert("Access Denied: Invalid Credentials or Authorization Code.");
+        }
+    } catch (e) {
+        alert("Connection Error. Please try again.");
     }
+}
 
     function logout() { localStorage.removeItem('adminSession'); location.reload(); }
     function toggleAuth() { if(getAdmin()) logout(); else showSection('loginSection'); }
@@ -456,6 +478,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
