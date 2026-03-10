@@ -250,32 +250,33 @@ function toggleAuthMode(mode) {
 }
 
 async function login() {
-    // 1. Get values from the inputs
     const u = document.getElementById('adminUser').value.trim();
     const p = document.getElementById('adminPass').value.trim();
 
-    if (!u || !p) return alert("Please enter username and password.");
+    if (!u || !p) {
+        alert("Please enter username and password.");
+        return;
+    }
 
     try {
-        // 2. Fetch the user's data from Firebase
+        // Fetch the user's data from Firebase
         const res = await fetch(`${BASE_URL}admins/${u}.json`);
         const d = await res.json();
 
-        // 3. Simple Check: Does user exist and does the password match?
+        // Check if the user exists and the password matches
+        // We removed the Secret Code check entirely because it's not needed for login
         if (d && d.password === p) {
             localStorage.setItem('adminSession', JSON.stringify({ name: d.name }));
             alert("Success! Welcome, " + d.name);
             location.reload(); 
         } else {
-            // This is where your current error is coming from.
-            alert("Invalid username or password. Please try again.");
+            alert("Invalid username or password.");
         }
     } catch (e) {
         console.error(e);
         alert("Error connecting to the database.");
     }
 }
-
 // 3. FIXED REGISTER (Saves data correctly)
 async function register() {
     const u = document.getElementById('adminUser').value.trim();
@@ -574,6 +575,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
