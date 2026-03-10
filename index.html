@@ -154,17 +154,26 @@
     </section>
 
     <section id="loginSection" class="hidden">
-    <div class="card shadow-lg p-4 mx-auto border-0" style="max-width: 380px; margin-top: 50px; border-radius: 15px;">
-        <h5 class="text-center fw-bold mb-2 text-primary">ADMIN ACCESS</h5>
-        <p class="text-center text-muted small mb-4">Authorized Personnel Only</p>
-        
-        <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username">
+    <div class="card shadow-lg p-4 mx-auto border-0" style="max-width: 400px; margin-top: 50px; border-radius: 15px;">
+        <div class="d-flex mb-4">
+            <button class="btn btn-sm w-50 fw-bold border-bottom" id="tabLogin" onclick="toggleAuthMode('login')">LOGIN</button>
+            <button class="btn btn-sm w-50 fw-bold text-muted" id="tabSignup" onclick="toggleAuthMode('signup')">SIGN UP</button>
+        </div>
+
+        <div id="authTitle" class="text-center mb-4">
+            <h5 class="fw-bold text-primary">STAFF LOGIN</h5>
+        </div>
+
+        <input type="text" id="adminUser" class="form-control mb-3" placeholder="Username (no spaces)">
         <input type="password" id="adminPass" class="form-control mb-3" placeholder="Password">
         
-        <label class="small fw-bold text-danger">Authorization Code</label>
-        <input type="text" id="authCode" class="form-control mb-4" placeholder="Enter 6-Digit Code">
-        
-        <button class="btn btn-primary w-100 fw-bold py-2" onclick="login()">SIGN IN</button>
+        <div id="signupFields" class="hidden">
+            <input type="text" id="adminDisplayName" class="form-control mb-3" placeholder="Your Full Name (e.g. Mr. Smith)">
+            <label class="small fw-bold text-danger">Secret Authorization Code</label>
+            <input type="text" id="authCode" class="form-control mb-4" placeholder="Enter 6-Digit Code">
+        </div>
+
+        <button id="authBtn" class="btn btn-primary w-100 fw-bold py-2" onclick="login()">SIGN IN</button>
     </div>
 </section>
 
@@ -213,6 +222,60 @@
 
     let deleteTimer;
 
+
+    let authMode = 'login';
+
+function toggleAuthMode(mode) {
+    authMode = mode;
+    const signupFields = document.getElementById('signupFields');
+    const authBtn = document.getElementById('authBtn');
+    const authTitle = document.getElementById('authTitle');
+
+    if (mode === 'signup') {
+        signupFields.classList.remove('hidden');
+        authBtn.innerText = "CREATE ACCOUNT";
+        authBtn.onclick = register;
+        authTitle.innerHTML = '<h5 class="fw-bold text-success">TEACHER REGISTRATION</h5>';
+    } else {
+        signupFields.classList.add('hidden');
+        authBtn.innerText = "SIGN IN";
+        authBtn.onclick = login;
+        authTitle.innerHTML = '<h5 class="fw-bold text-primary">STAFF LOGIN</h5>';
+    }
+}
+
+async function register() {
+    const u = document.getElementById('adminUser').value.trim();
+    const p = document.getElementById('adminPass').value.trim();
+    const name = document.getElementById('adminDisplayName').value.trim();
+    const codeInput = document.getElementById('authCode').value.trim();
+
+    if (!u || !p || !name || !codeInput) { return alert("Please fill all fields."); }
+
+    try {
+        // 1. Verify Secret Code from Firebase
+        const codeRes = await fetch(`${BASE_URL}settings/teacherCode.json`);
+        const validCode = await codeRes.json();
+
+        if (codeInput !== String(validCode)) {
+            return alert("Invalid Authorization Code. You are not authorized to register.");
+        }
+
+        // 2. Check if username already exists
+        const checkRes = await fetch(`${BASE_URL}admins/${u}.json`);
+        const existing = await checkRes.json();
+        if (existing) { return alert("Username already taken."); }
+
+        // 3. Save New Teacher
+        await fetch(`${BASE_URL}admins/${u}.json`, {
+            method: 'PUT',
+            body: JSON.stringify({ name: name, password: p })
+        });
+
+        alert("Account Created! You can now log in.");
+        toggleAuthMode('login');
+    } catch (e) { alert("Registration failed."); }
+}
 function startHold(pk, ck) {
     deleteTimer = setTimeout(() => {
         if(confirm("Delete this comment permanently?")) {
@@ -478,6 +541,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
