@@ -403,27 +403,27 @@ function clearHold() {
     const codeInput = document.getElementById('authCode').value;
 
     try {
-        // 1. Fetch the user data
+        // Fetch the specific teacher's password
         const res = await fetch(`${BASE_URL}admins/${u}.json`);
         const d = await res.json();
 
-        // 2. Fetch the "Secret Code" from a private folder in Firebase
-        // Create a folder in Firebase named 'settings' with a key 'teacherCode'
+        // Fetch the secret code from your new 'settings' key
         const codeRes = await fetch(`${BASE_URL}settings/teacherCode.json`);
         const validCode = await codeRes.json();
 
-        if (d && d.password === p && codeInput === validCode) {
+        // The check: Username exists AND Password matches AND Code matches
+        if (d && d.password === p && codeInput === String(validCode)) {
             localStorage.setItem('adminSession', JSON.stringify({ name: d.name }));
-            alert("Authorization Successful!");
+            alert("Success! Welcome, " + d.name);
             location.reload(); 
         } else {
-            alert("Access Denied: Invalid Credentials or Authorization Code.");
+            alert("Invalid Login. Please check your credentials and Secret Code.");
         }
     } catch (e) {
-        alert("Connection Error. Please try again.");
+        console.error(e);
+        alert("Error connecting to the database.");
     }
 }
-
     function logout() { localStorage.removeItem('adminSession'); location.reload(); }
     function toggleAuth() { if(getAdmin()) logout(); else showSection('loginSection'); }
     function showSection(id) { document.querySelectorAll('section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
@@ -478,6 +478,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
