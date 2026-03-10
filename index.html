@@ -249,18 +249,15 @@ function toggleAuthMode(mode) {
     }
 }
 
-// 2. FIXED LOGIN (No longer requires the secret code every time!)
 async function login() {
     const u = document.getElementById('adminUser').value.trim();
     const p = document.getElementById('adminPass').value.trim();
-
-    if (!u || !p) return alert("Please enter username and password.");
-
+    
+    // We remove the authCode check here because you are already a registered user!
     try {
         const res = await fetch(`${BASE_URL}admins/${u}.json`);
         const d = await res.json();
 
-        // We only check if the account exists and the password matches
         if (d && d.password === p) {
             localStorage.setItem('adminSession', JSON.stringify({ name: d.name }));
             alert("Success! Welcome, " + d.name);
@@ -269,7 +266,8 @@ async function login() {
             alert("Invalid username or password.");
         }
     } catch (e) {
-        alert("Connection error.");
+        console.error(e);
+        alert("Error connecting to the database.");
     }
 }
 
@@ -571,6 +569,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
