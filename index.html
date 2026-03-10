@@ -238,9 +238,9 @@ function toggleAuthMode(mode) {
 
     if (mode === 'signup') {
         signupFields.classList.remove('hidden');
-        authBtn.innerText = "CREATE ACCOUNT";
+        authBtn.innerText = "SIGN IN";
         authBtn.onclick = register;
-        authTitle.innerHTML = '<h5 class="fw-bold text-success">TEACHER REGISTRATION</h5>';
+        authTitle.innerHTML = '<h5 class="fw-bold text-success">SIGN UP</h5>';
     } else {
         signupFields.classList.add('hidden');
         authBtn.innerText = "LOG IN";
@@ -300,10 +300,10 @@ async function register() {
             body: JSON.stringify({ name: name, password: p })
         });
 
-        alert("Account Created! You can now log in using the Login tab.");
+        alert("Account Created!");
         toggleAuthMode('login'); 
     } catch (e) { 
-        alert("Registration failed."); 
+        alert("Login failed."); 
     }
 }
 function startHold(pk, ck) {
@@ -571,6 +571,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
