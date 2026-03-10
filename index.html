@@ -173,7 +173,7 @@
             <input type="text" id="authCode" class="form-control mb-4" placeholder="Enter Code">
         </div>
 
-        <button id="authBtn" class="btn btn-primary w-100 fw-bold py-2" onclick="login()">SIGN IN</button>
+        <button id="authBtn" class="btn btn-primary w-100 fw-bold py-2" onclick="login()">LOG IN</button>
     </div>
 </section>
 
@@ -233,14 +233,14 @@ function toggleAuthMode(mode) {
 
     if (mode === 'signup') {
         signupFields.classList.remove('hidden');
-        authBtn.innerText = "CREATE ACCOUNT";
+        authBtn.innerText = "SIGN IN";
         authBtn.onclick = register;
-        authTitle.innerHTML = '<h5 class="fw-bold text-success">TEACHER REGISTRATION</h5>';
+        authTitle.innerHTML = '<h5 class="fw-bold text-success">SIGN UP</h5>';
     } else {
         signupFields.classList.add('hidden');
         authBtn.innerText = "SIGN IN";
         authBtn.onclick = login;
-        authTitle.innerHTML = '<h5 class="fw-bold text-primary">STAFF LOGIN</h5>';
+        authTitle.innerHTML = '<h5 class="fw-bold text-primary">ADMIN LOGIN</h5>';
     }
 }
 
@@ -541,6 +541,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
