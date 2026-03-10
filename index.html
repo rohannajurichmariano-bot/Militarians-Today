@@ -259,12 +259,10 @@ async function login() {
     }
 
     try {
-        // Fetch the user's data from Firebase
         const res = await fetch(`${BASE_URL}admins/${u}.json`);
         const d = await res.json();
 
-        // Check if the user exists and the password matches
-        // We removed the Secret Code check entirely because it's not needed for login
+        // Check if user exists and password matches
         if (d && d.password === p) {
             localStorage.setItem('adminSession', JSON.stringify({ name: d.name }));
             alert("Success! Welcome, " + d.name);
@@ -575,6 +573,7 @@ function clearHold() {
 </script>
 </body>
 </html>
+
 
 
 
