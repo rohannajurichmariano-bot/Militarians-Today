@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Fort Magsaysay National High School - Multi-Media Student Publication
+    </title>
+
+    <style>
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #0f172a;
+            color: #ffffff;
+            text-align: center;
+            padding: 2rem 1rem;
+            border-bottom: 5px solid #2563eb;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+        }
+
+        header p {
+            margin-top: 5px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-tag {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            color: #0f172a;
+            margin: 0 0 10px 0;
+        }
+
+        h3 {
+            color: #0f172a;
+            margin-top: 22px;
+        }
+
+        .byline {
+            font-weight: bold;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .media-box {
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .media-box img {
+            width: 100%;
+            max-height: 380px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .caption {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-style: italic;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .poem-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(220px, 1fr)
+            );
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .poem-card {
+            background-color: #f8fafc;
+            border-left: 4px solid #2563eb;
+            padding: 14px;
+            border-radius: 5px;
+        }
+
+        .poem-card h4 {
+            margin: 0 0 4px 0;
+            color: #0f172a;
+        }
+
+        .poem-card .author {
+            font-size: 0.8rem;
+            color: #2563eb;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .poem-text {
+            font-family: Georgia, serif;
+            font-style: italic;
+            white-space: pre-line;
+            font-size: 0.85rem;
+            color: #334155;
+            margin-bottom: 10px;
+        }
+
+        audio {
+            width: 100%;
+            height: 32px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .team-member {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-top: 3px solid #0f172a;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto 10px auto;
+            border: 3px solid #2563eb;
+        }
+
+        .role {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        footer {
+            text-align: center;
+            padding: 18px;
+            background-color: #0f172a;
+            color: #ffffff;
+            margin-top: 30px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 600px) {
+
+            header h1 {
+                font-size: 1.6rem;
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-img {
+                width: 140px;
+                height: 140px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ========================= -->
+<!-- HEADER -->
+<!-- ========================= -->
+
+<header>
+
+    <h1>
+        Fort Magsaysay National High School
+    </h1>
+
+    <p>
+        Multi-Media Student Publication
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- ========================= -->
+<!-- SECTION 1: NATIONAL NEWS -->
+<!-- ========================= -->
+
+<article class="card">
+
+    <span class="section-tag">
+        National News
+    </span>
+
+    <h2>
+        State of the Nation Address 2026:
+        Key Takeaways &amp; Highlights
+    </h2>
+
+    <div class="byline">
+        Reported by: Maja A. Ramirez |
+        News Editor | August 2026
+    </div>
+
+    <p>
+        The State of the Nation Address (SONA) 2026
+        presents important updates and priorities concerning
+        the country. The address discusses issues that affect
+        Filipino citizens, including education, young people,
+        employment, economic development, and other national
+        concerns.
+    </p>
+
+    <p>
+        For students, national announcements about education
+        and youth development are especially important because
+        these policies can influence our learning experiences
+        and opportunities in the future.
+    </p>
+
+    <p>
+        The SONA also provides an opportunity for citizens to
+        understand the government's plans and priorities for
+        the country.
+    </p>
+
+
+    <div class="media-box">
+
+    <div class="video-wrapper">
+        <iframe
+            src="https://www.youtube.com/embed/0u4oMfHvf8c"
+            title="State of the Nation Address 2026"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <div class="caption">
+        Official SONA 2026 video highlight.
+    </div>
+
+</div>
+
+</article>
+
+
+
+<!-- ========================= -->
+<!-- SECTION 2: FEATURE ARTICLE -->
+<!-- ========================= -->
+
+<article class="card">
+
+    <span class="section-tag">
+        Feature Story
+    </span>
+
+    <h2>
+        New SHS, New Hope: How the Strengthened Curriculum
+        is Game-Changing for Us Grade 11s
+    </h2>
+
+    <div class="byline">
+        Written &amp; Photo Curated by:
+        Zeresh May T. Casauran |
+        Media Specialist
+    </div>
+
+
+    <h3>
+        Introduction
+    </h3>
+
+    <p>
+        Now as we enter grade 11, we have reached a point
+        where all the choices that we make academically will
+        start to influence our adult lives. High school can
+        be a lot sometimes with busy schedules and heavy
+        workloads but there are some major changes coming
+        that will make our journey a lot easier. Big changes
+        are now being introduced by the Department of Education
+        (DepEd) to make our high school life a more focused,
+        useful and highly relevant bridge to our future dreams.
+    </p>
+
+
+    <h3>
+        What is Strengthened SHS?
+    </h3>
+
+    <p>
+        To ease the load of students, DepEd’s revised K–12
+        program, dubbed as the Strengthened Senior High School
+        (SHS) Curriculum, cut down the previous 15 core
+        subjects to just five major courses. The Work Immersion
+        time has been extended and the strands are now divided
+        into two distinct pathways: Academic and
+        Technical-Professional (TechPro). The overall aim is
+        to make the final 2 years of secondary education more
+        manageable and useful, to better equip us for college,
+        the work force, or entrepreneurship.
+    </p>
+
+
+    <h3>
+        New Subjects / Electives
+    </h3>
+
+    <p>
+        The new curriculum replaces the 15 heavy core subjects
+        with five integrated learning areas: Effective
+        Communication, General Mathematics, General Science,
+        Life and Career Skills and Kasaysayan at Lipunang
+        Pilipino. Furthermore, the original tracks have been
+        streamlined into two main pathways: the Academic Track
+        and the Technical-Professional (TechPro) Track. In
+        addition, we can choose subjects that align with our
+        goals or interests; you can select electives from
+        different strands.
+    </p>
+
+
+    <h3>
+        Work Immersion and Practical Skills
+    </h3>
+
+    <p>
+        A key highlight of the strengthened program is its
+        heavy focus on real-world skills through expanded Work
+        Immersion. Instead of just sitting through classroom
+        lectures, we get to experience actual workplace
+        training, gain hands-on experience, and earn valuable
+        industry credentials like TESDA certifications.
+        Through stronger partnerships with companies, we get
+        the chance to practice our skills in real work settings,
+        building the confidence and professionalism we need
+        before we even graduate.
+    </p>
+
+
+    <h3>
+        Why It Matters to Grade 11 Students
+    </h3>
+
+    <p>
+        For us Grade 11 students, this means that what we do
+        for the rest of high school is directly catered to what
+        happens after graduation. If you want to go to a
+        university through the competitive entrance exams route,
+        or want to start your own business, or get specialised
+        technical training, or want to get a job immediately
+        after Grade 12, the new curriculum facilitates all the
+        four exit pathways equally. It helps us create a
+        meaningful personal portfolio, master core competencies,
+        and gain confidence without sacrificing our mental health
+        to schoolwork overload.
+    </p>
+
+
+    <h3>
+        Conclusion
+    </h3>
+
+    <p>
+        The Strengthened SHS Curriculum doesn't just reduce
+        the number of subjects but also aids the SHS Students
+        to facilitate and bring out their skills for their
+        future. The future is uncertain but we are more than
+        ready to take on whatever path we choose with a new
+        curriculum designed around our real world success.
+    </p>
+
+
+    <div class="media-box">
+
+        <img
+            src="img/feature.jpeg"
+            alt="Classroom discussion on the Strengthened SHS Curriculum">
+
+        <div class="caption">
+            A classroom discussion on the Strengthened SHS
+            Curriculum, highlighting the shift toward interactive
+            and career-focused learning for senior high students.
+        </div>
+
+    </div>
+
+
+    <p class="caption">
+        Source: Department of Education. (2026).
+        DepEd Order No. 017, s. 2026: Policy guidelines on the
+        implementation of the Strengthened Senior High School
+        (SHS) curriculum for SY 2026–2027. Pasig City:
+        Bureau of Curriculum Development, Department of Education.
+    </p>
+
+</article>
+
+
+
+<!-- ========================= -->
+<!-- SECTION 3: LITERARY CORNER -->
+<!-- ========================= -->
+
+<section class="card">
+
+    <span class="section-tag">
+        Literary Corner
+    </span>
+
+    <h2>
+        Voices of Grade 11: Reflections on Senior High School
+    </h2>
+
+    <p>
+        Original poems written by the team members,
+        reflecting on their Grade 11 journey.
+    </p>
+
+
+    <div class="poem-grid">
+
+
+        <!-- ================= -->
+        <!-- MEMBER 1 POEM -->
+        <!-- ================= -->
+
+        <div class="poem-card">
+
+            <h4>
+                GRADE 11 — ONLY THE BEGINNING
+            </h4>
+
+            <div class="author">
+                By: Rohanna Jurich M. Cabildo
+            </div>
+
+            <div class="poem-text">
+Before Grade 11,
+I was nervous—
+not because of the lessons,
+but because familiar faces were leaving.
+Some transferred,
+some chose another school,
+and only five of us stayed.
+It was sad, not gonna lie.
+We used to fight secretly in class,
+then laugh like nothing happened.
+Ten–Wakelet,
+the “tamad” ones—
+just kidding.
+But those little moments
+became memories I didn't want to lose.
+
+Then came the question:
+What do I take in Senior High School?
+The new curriculum confused me,
+and I was scared I might get lost,
+even with only two rooms.
+So I searched,
+I thought,
+and somehow chose STEM—
+maybe a doctor,
+maybe a nurse,
+whatever fits the budget.
+
+Then school began.
+New teachers,
+new lessons,
+new introductions.
+But some classmates were familiar friends
+from another section,
+so slowly,
+I became comfortable,
+and a little more confident.
+Then came the election—
+and somehow,
+I became Vice President.
+
+I wasn't sure if I wanted it.
+Leadership meant responsibility,
+and responsibility meant stress.
+But I stayed.
+I joined YES-O too,
+and became Vice President again.
+
+Days filled with lessons,
+recitations I still don't love,
+dancing, performances,
+quizzes, activities,
+and exams waiting around the corner.
+I even forgot lessons
+I had already learned before,
+so maybe Grade 11
+wasn't completely new after all.
+
+I watched friendships grow,
+circles form,
+achievers shine,
+best friends become closer,
+and relationships begin.
+As for me—
+there was a “thing,”
+but let's not talk about that.
+
+Being an officer wasn't easy.
+Some wouldn't listen,
+some wouldn't help,
+and sometimes leading felt exhausting.
+Still, I trusted my fellow officers,
+trusted my classmates,
+and kept going.
+
+And now,
+Term 1 is almost over.
+Grade 11–JCF,
+this is only the beginning.
+May the days ahead
+be happier,
+louder,
+and brighter—
+with more memories
+waiting to be made.
+
+            </div>
+
+            <audio controls>
+
+                <source
+                    src="audio/audio1.mp3"
+                    type="audio/mpeg">
+
+                Your browser does not support
+                the audio element.
+
+            </audio>
+
+        </div>
+
+
+
+        <!-- ================= -->
+        <!-- MEMBER 2 POEM -->
+        <!-- ================= -->
+
+        <div class="poem-card">
+
+            <h4>
+                Tulay sa Bukas
+            </h4>
+
+            <div class="author">
+                By: Maja A. Ramirez
+            </div>
+
+            <div class="poem-text">
+
+Bagong oras, mas malalim na aral,
+Sa bagong yugto, tayo ay sumalang.
+Hindi na bata, hindi pa ganap na matanda,
+Dito sa Baitang 11, lakas ay binubuo’t sinisikap.
+
+Mga numero at agham na pinag-aaralan,
+Mga salitang nagbibigay ng kaisipan.
+Kahit mahirap, kahit nakakapagod,
+Laging may pag-asa, laging may pag-asa’t pag-asa sa puso.
+
+Kasama ang kaibigan sa tuwa at hirap,
+Magtutulungan upang di tayo matuluyang mapagod.
+Pangarap ay nagliliwanag sa bawat pagsisikap,
+Para sa kinabukasan, para sa ating layunin.
+
+Tulay ito patungo sa ating mga pangarap,
+Dito nahuhubog ang isip at kalooban.
+Bawat hakbang ay pag-ahon at pag-asenso,
+Baitang 11—hahanda tayo sa tagumpay ng buong puso!
+
+            </div>
+
+            <audio controls>
+
+                <source
+                    src="audio/audio2.mp3"
+                    type="audio/mpeg">
+
+                Your browser does not support
+                the audio element.
+
+            </audio>
+
+        </div>
+
+
+
+        <!-- ================= -->
+        <!-- MEMBER 3 POEM -->
+        <!-- ================= -->
+
+        <div class="poem-card">
+
+            <h4>
+                Still Climbing: My Grade 11 Journey
+            </h4>
+
+            <div class="author">
+                By: Zeresh May T. Casauran
+            </div>
+
+            <div class="poem-text">
+
+I still remember day number one,
+Walking in scared, no time for fun.
+New faces everywhere I looked,
+My hands were shaking, eyes on my desk.
+Grade 11 feels so big and hard,
+With endless projects in my yard.
+Late night study, feeling tired,
+Just wanting my grades to be inspired.
+Some days are heavy, I won't lie,
+There are times I just want to cry.
+But talking with my trusted friends
+Helps make the bad feelings end.
+I take some time to rest and play,
+To wash the heavy stress away.
+I’m learning to stand up on my own,
+And look at how much I have grown.
+The journey’s not yet at the end,
+There’s still a long way to ascend.
+But I will keep on doing my best,
+Until I finally reach the rest!
+
+            </div>
+
+            <audio controls>
+
+                <source
+                    src="audio/audio3.mp3"
+                    type="audio/mpeg">
+
+                Your browser does not support
+                the audio element.
+
+            </audio>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+
+<!-- ========================= -->
+<!-- EDITORIAL BOARD -->
+<!-- ========================= -->
+
+<section class="card">
+
+    <span class="section-tag">
+        Editorial Board
+    </span>
+
+    <h2>
+        Meet the Editorial Board
+    </h2>
+
+
+    <div class="team-grid">
+
+
+        <!-- MEMBER 1 -->
+
+        <div class="team-member">
+
+            <img
+                src="img/member1.jpg"
+                alt="Rohanna Jurich M. Cabildo"
+                class="profile-img">
+
+            <h4>
+                Rohanna Jurich M. Cabildo
+            </h4>
+
+            <div class="role">
+                Lead Developer
+            </div>
+
+        </div>
+
+
+
+        <!-- MEMBER 2 -->
+
+        <div class="team-member">
+
+            <img
+                src="img/member2.jpg"
+                alt="Maja A. Ramirez"
+                class="profile-img">
+
+            <h4>
+                Maja A. Ramirez
+            </h4>
+
+            <div class="role">
+                News Editor
+            </div>
+
+        </div>
+
+
+
+        <!-- MEMBER 3 -->
+
+        <div class="team-member">
+
+            <img
+                src="img/member3.jpg"
+                alt="Zeresh May T. Casauran"
+                class="profile-img">
+
+            <h4>
+                Zeresh May T. Casauran
+            </h4>
+
+            <div class="role">
+                Media Specialist
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- FOOTER -->
+<!-- ========================= -->
+
+<footer>
+
+    <p>
+        &copy; 2026 Multi-Media Student Publication |
+        Fort Magsaysay National High School
+    </p>
+
+</footer>
+
+
+</body>
+
+</html>
